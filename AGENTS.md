@@ -12,7 +12,7 @@ when requested or when leaving the page. Exercise analysis comes later.
 Implement only this milestone; later stages require user authorization.
 The structure below is the target plan. Some files exist; create the remaining
 files only when their implementation stage is authorized.
-Work only inside /Users/mukhammaddiyor/Desktop/coach-app.
+Work only inside this repository root (`coach-app/`).
 
 ## 2. Selected Technologies
 
@@ -191,3 +191,32 @@ Use English for the entire project: interface text, exercise instructions,
 page titles, accessibility labels, loading and error messages, code comments,
 and project documentation. Keep future additions in English as well.
 Conversation with the user may remain in Uzbek unless they request otherwise.
+
+
+## 12. Privacy and Confidential Data
+
+- Never commit credentials, API keys, tokens, passwords, private keys, local
+  environment files, logs, databases, or camera captures. Keep them outside
+  public asset folders and cover local files with `.gitignore`.
+- A committed `.env.example` may contain variable names and empty placeholders
+  only. Real values belong in local environment variables or an ignored file.
+- Never put secrets in HTML, browser JavaScript, query strings, error messages,
+  logs, screenshots, documentation, or commit messages.
+- Avoid machine-specific paths and personal identifiers in tracked documentation.
+- Before committing, review the exact staged files for sensitive content.
+  `.gitignore` does not remove files that are already tracked or in Git history.
+- Do not print secret values while checking them. Report filenames and counts
+  only. If an actual credential is discovered in history, do not push it; arrange
+  credential rotation and history cleanup without exposing its value.
+- At the current stage, camera video remains in the browser. Do not record,
+  persist, upload, or send it to a third-party service.
+- When local pose analysis is authorized, send only the frames needed for
+  analysis to the local backend, process them in memory, and explain that data
+  flow in the interface. Do not retain frames or landmarks by default.
+- Stop the camera when the user stops it, leaves the page, or hides the tab.
+- Serve only intended public assets. Never expose the repository root, local
+  environment files, private directories, or model files as static content.
+- Keep external scripts, analytics, and third-party image/font requests out of
+  the interface. Use restrictive browser policies and local-only host settings.
+- Keep debug tracebacks out of HTTP responses. This local prototype must not
+  be exposed publicly without an explicit deployment and access-control review.

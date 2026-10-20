@@ -1,6 +1,36 @@
+# Python environment and generated files
 .venv/
 __pycache__/
 *.pyc
 .DS_Store
-models/*.task
+
+# Credentials and local environment settings
 .env
+.env.*
+!.env.example
+.envrc
+.secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+id_rsa
+id_ed25519
+
+# Private runtime data and camera captures
+private/
+data/
+uploads/
+recordings/
+captures/
+logs/
+*.log
+*.db
+*.sqlite
+*.sqlite3
+*.bak
+*.backup
+
+# Downloaded AI models
+models/*.task

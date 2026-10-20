@@ -38,7 +38,7 @@ If `.venv` already exists, activate it and install the requirements.
 Open the VS Code terminal and run:
 
 ```bash
-cd /Users/mukhammaddiyor/Desktop/coach-app
+cd /path/to/coach-app
 source .venv/bin/activate
 python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
 ```
@@ -98,3 +98,13 @@ Node.js is used only for these tests; the application backend remains Python.
 The tests cover start and stop, permission errors and retry, duplicate starts,
 late permission results, page navigation, playback failure, and disconnection.
 Real camera permissions and device behavior still need a check in your browser.
+
+
+## Confidential files
+
+Keep credentials in local environment variables or an ignored `.env` file.
+Do not add real values to HTML, JavaScript, documentation, or screenshots.
+Only empty configuration examples may be committed as `.env.example`.
+Logs, databases, private data folders, and camera captures are ignored by Git.
+Review staged files before every commit: ignore rules do not remove old commits
+or files that are already tracked.
