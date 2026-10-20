@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Tanlangan mashq uchun kamera va boshlang‘ich holat ko‘rsatmalari." />
+    <title>Mashq ko‘rsatmalari — Coach App</title>
+    <link rel="stylesheet" href="../static/css/style.css" />
+    <script src="../static/js/workout.js" defer></script>
+  </head>
+  <body>
+    <div class="page">
+      <header class="header">
+        <a class="brand" href="index.html" aria-label="Coach App bosh sahifasi">
+          <span class="brand-symbol" aria-hidden="true">C<span>•</span></span>
+          Coach App
+        </a>
+        <span class="camera-status"><span aria-hidden="true"></span>Kamera o‘chiq</span>
+      </header>
+
+      <main>
+        <a class="back-link" href="index.html">← Mashqlarga qaytish</a>
+
+        <section class="workout-intro" aria-labelledby="workout-title">
+          <p class="eyebrow">IKKINCHI QADAM · TAYYORGARLIK</p>
+          <h1 id="workout-title">Mashq ko‘rsatmalari</h1>
+          <p id="workout-description" class="intro-description">Ko‘rsatmalar yuklanmoqda…</p>
+        </section>
+
+        <noscript>
+          <p>Ko‘rsatmalarni ko‘rish uchun brauzerda JavaScript’ni yoqing.</p>
+        </noscript>
+
+        <!-- URL'dagi mashq tekshirilgandan keyingina ko'rsatmalar chiqariladi. -->
+        <div id="workout-content" hidden>
+          <nav class="exercise-tabs" aria-label="Boshqa mashqni tanlash">
+            <a href="workout.html?exercise=pushup" data-exercise="pushup">Push Up</a>
+            <a href="workout.html?exercise=squats" data-exercise="squats">Squats</a>
+            <a href="workout.html?exercise=lunge" data-exercise="lunge">Lunge</a>
+          </nav>
+
+          <div class="workout-layout">
+            <section class="instruction-panel" aria-labelledby="instructions-title">
+              <p class="eyebrow">BOSHLASHDAN OLDIN</p>
+              <h2 id="instructions-title">Qanday tayyorlanamiz?</h2>
+              <ol id="instruction-list" class="instruction-list"></ol>
+            </section>
+
+            <aside class="camera-panel" aria-labelledby="camera-title">
+              <div class="camera-placeholder" aria-hidden="true">
+                <svg viewBox="0 0 80 80" fill="none">
+                  <rect x="12" y="20" width="42" height="40" rx="10" />
+                  <path d="M54 33L69 25V55L54 47" />
+                </svg>
+              </div>
+              <h2 id="camera-title">Kamera uchun tayyorlaning</h2>
+              <p id="camera-guidance"></p>
+              <button class="start-button" type="button" disabled aria-describedby="camera-note">Kamerani yoqish</button>
+              <p id="camera-note" class="stage-note">Kamera hali ulanmagan. Hozir ko‘rsatmalarni o‘qishingiz mumkin.</p>
+            </aside>
+          </div>
+        </div>
+      </main>
+
+      <footer><span>COACH APP</span><span>Kichik qadamlar. Tushunarli harakatlar.</span></footer>
+    </div>
+  </body>
+</html>

@@ -4,9 +4,11 @@ Push Up, Squats va Lunge uchun mashq yordamchisi.
 
 ## Hozir nima ishlaydi?
 
-Birinchi bosqich tayyor: uchta mashq kartasi bor. Kartani bosganda
-u tanlanadi va pastdagi panelda mashq nomi chiqadi.
-Kamera, FastAPI sahifalari va takrorlarni sanash keyingi bosqichlarda qo‘shiladi.
+Ikkinchi bosqich tayyor: Push Up, Squats va Lunge kartalari alohida
+mashq sahifasini ochadi. Unda tanlangan mashqning ko‘rsatmalari va kamera
+joylashuvi ko‘rsatiladi. Boshqa mashqqa o‘tish va bosh sahifaga qaytish ishlaydi.
+Kamera tugmasi hozircha o‘chiq. FastAPI va takror sanash keyin qo‘shiladi.
+Noma’lum mashq manzili ochilsa, tushunarli xabar chiqadi.
 
 ## Sahifani ochish
 
@@ -27,7 +29,8 @@ FastAPI ishga tushirish buyrug‘i backend yaratilganda qo‘shiladi.
 
 - `frontend/templates/index.html` — sahifadagi yozuvlar va tugmalar.
 - `frontend/static/css/style.css` — sahifa ko‘rinishi.
-- `frontend/static/js/exercises.js` — mashq tanlash harakati.
+- `frontend/templates/workout.html` — tanlangan mashqning sahifasi.
+- `frontend/static/js/workout.js` — mashq nomi va ko‘rsatmalarini ko‘rsatish.
 - `AGENTS.md` — MVC, service layer va kichik commitlar qoidalari.
 
 `backend/services/`, `backend/vision/` va `models/` hozircha bo‘sh.

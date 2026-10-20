@@ -7,8 +7,8 @@ The user selects an exercise and turns on the camera. The app counts
 repetitions and provides feedback on the posture features it can observe.
 
 The user has authorized starting implementation. The current milestone is
-stage 1: a simple exercise-selection page with Push Up, Squats, and Lunge
-buttons. Implement only this milestone; later stages require user authorization.
+stage 2: a separate workout page with exercise-specific instructions, opened
+from the Push Up, Squats, and Lunge selection cards. Implement only this milestone; later stages require user authorization.
 The structure below is the target plan. Some files exist; create the remaining
 files only when their implementation stage is authorized.
 Work only inside /Users/mukhammaddiyor/Desktop/coach-app.

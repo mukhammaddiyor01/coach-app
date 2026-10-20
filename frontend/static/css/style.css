@@ -35,16 +35,13 @@ a { color: inherit; }
 h1 { margin: 0; font-size: clamp(34px, 5vw, 54px); line-height: 1.12; font-weight: 650; letter-spacing: -2px; }
 .intro-description { margin: 20px 0 0; color: var(--muted); font-size: 15px; line-height: 1.7; }
 
-/* Mashq kartalari. aria-pressed tanlangan kartani belgilaydi. */
+/* Mashq kartalari tegishli ko‘rsatmalar sahifasiga olib boradi. */
 .exercise-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
 .exercise-card { display: flex; flex-direction: column; padding: 20px 22px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); color: var(--text); text-align: left; cursor: pointer; transition: background 150ms, border-color 150ms; }
 .exercise-card:hover { border-color: #7a956a; background: #f0f6e8; }
-.exercise-card[aria-pressed="true"] { background: var(--accent); border-color: #789545; }
 .exercise-card:focus-visible, .brand:focus-visible { outline: 3px solid var(--text); outline-offset: 4px; }
 .card-top { display: flex; align-items: center; justify-content: space-between; }
 .exercise-number { font-size: 12px; color: var(--muted); }
-.selection-mark { visibility: hidden; display: grid; place-items: center; width: 23px; height: 23px; background: var(--text); color: white; border-radius: 50%; font-size: 13px; }
-[aria-pressed="true"] .selection-mark { visibility: visible; }
 .exercise-drawing { width: 100%; height: 140px; margin: 8px 0 14px; stroke: var(--text); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
 .exercise-drawing .ground { stroke: #c3cdbd; stroke-width: 1.5; }
 .exercise-drawing .secondary-limb { opacity: 0.4; stroke-width: 4; }
@@ -54,10 +51,6 @@ h1 { margin: 0; font-size: clamp(34px, 5vw, 54px); line-height: 1.12; font-weigh
 .card-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; padding-top: 14px; border-top: 1px solid #d1ddc9; font-size: 12px; }
 .card-arrow { font-size: 20px; }
 
-.selection-panel { display: flex; align-items: center; gap: 16px; margin-top: 24px; padding: 20px 22px; background: #edf1e8; border: 1px solid var(--border); border-radius: 14px; }
-.panel-icon { display: grid; place-items: center; flex-shrink: 0; width: 36px; height: 36px; background: white; border-radius: 50%; font-size: 21px; }
-.selection-panel h2 { font-size: 15px; margin: 0 0 3px; font-weight: 650; }
-.selection-panel p { margin: 0; color: var(--muted); font-size: 13px; }
 .stage-note { margin: 18px 0 0; color: var(--muted); font-size: 12px; }
 footer { display: flex; justify-content: space-between; gap: 12px; margin-top: 48px; padding: 22px 0; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px; }
 footer span:first-child { font-weight: 700; letter-spacing: 1px; }
@@ -69,10 +62,41 @@ footer span:first-child { font-weight: 700; letter-spacing: 1px; }
   .exercise-grid { grid-template-columns: 1fr; gap: 14px; }
   .exercise-card { padding: 18px 22px; }
   .exercise-drawing { height: 120px; }
-  .selection-panel { align-items: flex-start; padding: 18px; }
   footer { flex-wrap: wrap; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .exercise-card { transition: none; }
+}
+
+/* Mashq sahifasidagi ko'rsatmalar va tayyorgarlik paneli. */
+.exercise-card { text-decoration: none; }
+.exercise-tabs a:focus-visible, .back-link:focus-visible { outline: 3px solid var(--text); outline-offset: 4px; }
+.back-link { display: inline-block; margin-top: 28px; font-size: 13px; text-decoration: none; }
+.back-link:hover { text-decoration: underline; }
+.workout-intro { padding: 30px 0; }
+.exercise-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+.exercise-tabs a { padding: 9px 20px; border: 1px solid var(--border); border-radius: 30px; font-size: 14px; text-decoration: none; }
+.exercise-tabs a:hover { background: #edf1e8; }
+.exercise-tabs a[aria-current="page"] { background: var(--text); border-color: var(--text); color: white; }
+.workout-layout { display: grid; grid-template-columns: 1.25fr 1fr; gap: 24px; align-items: start; }
+.instruction-panel, .camera-panel { padding: 28px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); }
+.instruction-panel h2, .camera-panel h2 { margin: 0; font-size: 20px; letter-spacing: -0.5px; }
+.instruction-panel .eyebrow { margin-bottom: 10px; }
+.instruction-list { list-style: none; padding: 0; margin: 24px 0 0; counter-reset: step; }
+.instruction-list li { position: relative; padding-left: 44px; counter-increment: step; }
+.instruction-list li + li { margin-top: 24px; }
+.instruction-list li::before { content: counter(step, decimal-leading-zero); position: absolute; top: 0; left: 0; display: grid; place-items: center; width: 30px; height: 30px; background: #edf1e8; border-radius: 9px; font-size: 12px; font-weight: 650; }
+.instruction-list h3 { margin: 0 0 5px; font-size: 15px; }
+.instruction-list p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+.camera-panel { background: #edf1e8; }
+.camera-placeholder { display: grid; place-items: center; aspect-ratio: 16 / 9; margin-bottom: 24px; border: 1px dashed #afbf9e; border-radius: 12px; background: #e3eadb; }
+.camera-placeholder svg { width: 64px; height: 64px; stroke: #66815c; stroke-width: 2.5; stroke-linejoin: round; }
+.camera-panel > p { color: var(--muted); font-size: 13px; line-height: 1.7; }
+.start-button { display: block; width: 100%; margin-top: 22px; padding: 13px 18px; border: 0; border-radius: 10px; background: #cbd4c4; color: #4c5e43; font-weight: 600; }
+.start-button:disabled { cursor: not-allowed; }
+
+@media (max-width: 750px) {
+  .workout-layout { grid-template-columns: 1fr; }
+  .instruction-panel, .camera-panel { padding: 22px; }
 }
