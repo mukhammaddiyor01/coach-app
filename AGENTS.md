@@ -165,3 +165,18 @@ provide explanations only. Implement only the stage authorized by the user;
 do not write later stages on your own initiative.
 Request camera permission only after a user action. Stop the camera tracks
 when the camera is turned off. Do not save video by default.
+
+## 10. Commit Messages
+
+Use only `feat:` and `fix:` prefixes for commit messages.
+- `feat:` for new functionality or additions.
+- `fix:` for corrections to existing behavior or files.
+Do not use other prefixes such as `chore:`, `docs:`, `refactor:`, or `test:`.
+Write a short, clear description after the prefix.
+
+Commit each completed logical change immediately after verifying it, using
+`feat:` or `fix:`. Each commit must cover one small, complete, coherent change.
+Do not accumulate unrelated changes, multiple large features, or the entire
+project into a single commit. Split larger work into small, independently
+verifiable steps and commit each completed step before starting the next.
+Stage only the files or hunks belonging to that logical change.
