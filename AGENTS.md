@@ -7,8 +7,9 @@ The user selects an exercise and turns on the camera. The app counts
 repetitions and provides feedback on the posture features it can observe.
 
 The user has authorized starting implementation. The current milestone is
-stage 2: a separate workout page with exercise-specific instructions, opened
-from the Push Up, Squats, and Lunge selection cards. Implement only this milestone; later stages require user authorization.
+stage 3: serve the selection and workout pages through FastAPI and Jinja2,
+with controllers in backend/routes.py and HTML in frontend/templates/.
+Implement only this milestone; later stages require user authorization.
 The structure below is the target plan. Some files exist; create the remaining
 files only when their implementation stage is authorized.
 Work only inside /Users/mukhammaddiyor/Desktop/coach-app.
@@ -17,7 +18,7 @@ Work only inside /Users/mukhammaddiyor/Desktop/coach-app.
 
 - FastAPI: receive requests and return responses.
 - HTML, CSS, JavaScript: pages, buttons, and browser camera access.
-- Jinja2: render HTML templates through FastAPI; install at the page stage.
+- Jinja2: render HTML templates through FastAPI; installed for page rendering.
 - MediaPipe: detect body landmarks.
 - OpenCV and NumPy: process images.
 - A database is not required at this stage.
@@ -57,6 +58,7 @@ coach-app/
 ├── backend/
 │   ├── main.py                 # Create FastAPI; connect routes, static files, templates
 │   ├── routes.py               # Controller: page and analysis requests
+│   ├── exercises.py            # Exercise names and display instructions
 │   ├── schemas.py              # Input/output formats, when needed
 │   ├── models.py               # Database tables, only when a database is added
 │   ├── services/

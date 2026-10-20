@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Choose Push Up, Squats, or Lunge to get started." />
     <title>Coach App — Choose your exercise</title>
-    <link rel="stylesheet" href="../static/css/style.css" />
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}" />
   </head>
   <body>
     <div class="page">
       <header class="header">
-        <a class="brand" href="index.html" aria-label="Coach App home">
+        <a class="brand" href="{{ url_for('home') }}" aria-label="Coach App home">
           <span class="brand-symbol" aria-hidden="true">C<span>•</span></span>
           Coach App
         </a>
@@ -26,7 +26,7 @@
 
         <!-- Each card opens the instructions for its exercise. -->
         <nav class="exercise-grid" aria-label="Exercises">
-          <a class="exercise-card" href="workout.html?exercise=pushup">
+          <a class="exercise-card" href="{{ url_for('workout', exercise_id='pushup') }}">
             <span class="card-top"><span class="exercise-number">01</span></span>
             <svg class="exercise-drawing" viewBox="0 0 260 140" fill="none" aria-hidden="true">
               <path class="ground" d="M25 118H235" />
@@ -40,7 +40,7 @@
             <span class="card-bottom">Upper body &amp; core<span class="card-arrow" aria-hidden="true">↗</span></span>
           </a>
 
-          <a class="exercise-card" href="workout.html?exercise=squats">
+          <a class="exercise-card" href="{{ url_for('workout', exercise_id='squats') }}">
             <span class="card-top"><span class="exercise-number">02</span></span>
             <svg class="exercise-drawing" viewBox="0 0 260 140" fill="none" aria-hidden="true">
               <path class="ground" d="M25 118H235" />
@@ -54,7 +54,7 @@
             <span class="card-bottom">Legs &amp; core<span class="card-arrow" aria-hidden="true">↗</span></span>
           </a>
 
-          <a class="exercise-card" href="workout.html?exercise=lunge">
+          <a class="exercise-card" href="{{ url_for('workout', exercise_id='lunge') }}">
             <span class="card-top"><span class="exercise-number">03</span></span>
             <svg class="exercise-drawing" viewBox="0 0 260 140" fill="none" aria-hidden="true">
               <path class="ground" d="M25 118H235" />
