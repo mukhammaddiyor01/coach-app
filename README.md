@@ -40,7 +40,7 @@ Open the VS Code terminal and run:
 ```bash
 cd /path/to/coach-app
 source .venv/bin/activate
-python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000 --no-access-log
 ```
 
 Open http://127.0.0.1:8000 in your browser.
@@ -53,6 +53,7 @@ files are now Jinja2 templates that must be rendered by FastAPI.
 
 - `backend/main.py` — creates FastAPI and connects static files and routes.
 - `backend/routes.py` — page controllers and exercise ID validation.
+- `backend/security.py` — HTTP policies and allowed public asset types.
 - `backend/exercises.py` — exercise names and display instructions.
 - `frontend/templates/index.html` — exercise selection template.
 - `frontend/templates/workout.html` — selected exercise template.
@@ -108,3 +109,34 @@ Only empty configuration examples may be committed as `.env.example`.
 Logs, databases, private data folders, and camera captures are ignored by Git.
 Review staged files before every commit: ignore rules do not remove old commits
 or files that are already tracked.
+
+
+## Local HTTP privacy protections
+
+- Only localhost and 127.0.0.1 hostnames are accepted. Keep the server bound to
+  127.0.0.1; host validation is not a replacement for network access controls.
+- Browser policies restrict scripts, styles, images, and connections to this app
+  and disallow framing. The camera is allowed for this origin; microphone and
+  location access are blocked.
+- Responses use `Cache-Control: no-store` and `Referrer-Policy: no-referrer`.
+- Static serving allows only public CSS, JavaScript, image, and font file types.
+  Dotfiles, recordings, model files, databases, and key files are not served.
+- Debug mode and API documentation endpoints are disabled.
+- The run command disables request access logs so URLs are not written there.
+
+These protections apply to this local prototype. Do not publish it as a public
+service without adding appropriate authentication and reviewing data handling.
+If a real credential was ever committed, ignoring the file is not sufficient:
+rotate the credential and remove it from history before publishing.
+
+## HTTP privacy tests
+
+Install the optional test dependency and run the checks:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m unittest discover -s tests -p 'test_*.py'
+```
+
+These tests use an in-process client and temporary dummy files. They do not
+access the camera or transmit project data to external services.

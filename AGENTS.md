@@ -58,6 +58,7 @@ coach-app/
 ├── backend/
 │   ├── main.py                 # Create FastAPI; connect routes, static files, templates
 │   ├── routes.py               # Controller: page and analysis requests
+│   ├── security.py             # HTTP policies and public asset restrictions
 │   ├── exercises.py            # Exercise names and display instructions
 │   ├── schemas.py              # Input/output formats, when needed
 │   ├── models.py               # Database tables, only when a database is added
