@@ -28,7 +28,7 @@ a { color: inherit; }
 .brand-symbol { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 11px; background: var(--text); color: white; font-size: 24px; }
 .brand-symbol span { color: var(--accent); font-size: 15px; margin-left: -2px; }
 .camera-status { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
-.camera-status > span { width: 6px; height: 6px; border-radius: 50%; background: #849187; }
+.camera-status > span:first-child { width: 6px; height: 6px; border-radius: 50%; background: #849187; }
 
 .intro { padding: 52px 0 32px; }
 .eyebrow { margin: 0 0 16px; font-size: 11px; font-weight: 700; letter-spacing: 1.7px; color: var(--muted); }
@@ -93,8 +93,68 @@ footer span:first-child { font-weight: 700; letter-spacing: 1px; }
 .camera-placeholder { display: grid; place-items: center; aspect-ratio: 16 / 9; margin-bottom: 24px; border: 1px dashed #afbf9e; border-radius: 12px; background: #e3eadb; }
 .camera-placeholder svg { width: 64px; height: 64px; stroke: #66815c; stroke-width: 2.5; stroke-linejoin: round; }
 .camera-panel > p { color: var(--muted); font-size: 13px; line-height: 1.7; }
-.start-button { display: block; width: 100%; margin-top: 22px; padding: 13px 18px; border: 0; border-radius: 10px; background: #cbd4c4; color: #4c5e43; font-weight: 600; }
-.start-button:disabled { cursor: not-allowed; }
+/* Keep the camera controls explicit and the preview inside its panel. */
+.camera-status[data-state="on"] > span:first-child {
+  background: #3a7d40;
+}
+
+.camera-status[data-state="starting"] > span:first-child {
+  background: #a47713;
+}
+
+.camera-video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  margin-bottom: 24px;
+  border-radius: 12px;
+  background: #183b31;
+}
+
+/* Author styles must not override the HTML hidden attribute. */
+[hidden] {
+  display: none !important;
+}
+
+.camera-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.start-button,
+.stop-button {
+  flex: 1 1 130px;
+  padding: 13px 18px;
+  border: 1px solid var(--text);
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.start-button {
+  background: var(--text);
+  color: white;
+}
+
+.stop-button {
+  background: transparent;
+  color: var(--text);
+}
+
+.camera-controls button:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: 4px;
+}
+
+.camera-controls button:disabled {
+  border-color: #cbd4c4;
+  background: #cbd4c4;
+  color: #4c5e43;
+  cursor: not-allowed;
+}
 
 @media (max-width: 750px) {
   .workout-layout { grid-template-columns: 1fr; }

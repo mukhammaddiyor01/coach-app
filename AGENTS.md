@@ -7,8 +7,8 @@ The user selects an exercise and turns on the camera. The app counts
 repetitions and provides feedback on the posture features it can observe.
 
 The user has authorized starting implementation. The current milestone is
-stage 3: serve the selection and workout pages through FastAPI and Jinja2,
-with controllers in backend/routes.py and HTML in frontend/templates/.
+stage 4: connect the browser camera, show its preview, and stop its tracks
+when requested or when leaving the page. Exercise analysis comes later.
 Implement only this milestone; later stages require user authorization.
 The structure below is the target plan. Some files exist; create the remaining
 files only when their implementation stage is authorized.
@@ -102,7 +102,8 @@ Do not implement a second, separate repetition counter in the frontend.
   `body_angle`, `rep_count`, `current_phase`, `is_body_straight`.
 - Avoid vague names such as `x1`, `tmp`, or `val` in core calculations.
 - Each function must perform one understandable task. Split large functions
-  into smaller functions.
+  into smaller functions. Keep code formatting readable: use normal indentation,
+  separate logical steps with blank lines, and avoid compressed one-line functions.
 - Explain why a rule is needed with a short comment in English.
 - Store angle thresholds in named settings; do not scatter them through the code.
 - Account for image width and height when working with image landmarks.
