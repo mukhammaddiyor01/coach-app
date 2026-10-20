@@ -1,36 +1,36 @@
-// Bu ma'lumotlar faqat sahifadagi ko'rsatmalar uchun. Hisoblash service'da bo'ladi.
+// Display instructions only. Exercise calculations belong in Python services.
 const exerciseInstructions = {
   pushup: {
     title: "Push Up",
-    description: "Otjimaniya uchun kamera va boshlang‘ich holatni tayyorlang.",
-    cameraGuidance: "Kamera sizni yon tomondan ko‘rsin. Yelka, bilak, son va oyoqlaringiz kadrga sig‘sin.",
+    description: "Set up your camera and starting position for push ups.",
+    cameraGuidance: "Use a side view. Keep your shoulders, wrists, hips, and feet in the frame.",
     steps: [
-      { title: "Kamerani joylashtiring", description: "Qurilmani barqaror joyga qo‘ying. Kamera sizni yon tomondan ko‘rsin va mashq uchun yetarli joy qolsin." },
-      { title: "Boshlang‘ich holatga o‘ting", description: "Qo‘llar yozilgan plank holatiga o‘ting. Butun tanangiz kamerada ko‘rinsin." },
-      { title: "Tanani tekis tuting", description: "Yelka, son va oyoqlarni bir tekis tutishga harakat qiling." },
-      { title: "Harakatni sekin bajaring", description: "Tirsaklarni bukib pastga tushing, so‘ng boshlang‘ich holatga qayting." },
+      { title: "Position your camera", description: "Place your device on a stable surface. Use a side view and leave enough room to exercise." },
+      { title: "Find your starting position", description: "Start in a plank position with your arms extended. Keep your whole body in the frame." },
+      { title: "Keep your body aligned", description: "Aim to keep your shoulders, hips, and feet in a straight line." },
+      { title: "Move with control", description: "Bend your elbows to lower your body, then return to your starting position." },
     ],
   },
   squats: {
     title: "Squats",
-    description: "O‘tirib-turish uchun butun tanangiz ko‘rinadigan joy tanlang.",
-    cameraGuidance: "Kamera yon tomonda bo‘lsin. Yelka, son, tizza va ikkala oyoq kadrda ko‘rinsin.",
+    description: "Choose a spot where your whole body stays visible during squats.",
+    cameraGuidance: "Use a side view. Keep your shoulders, hips, knees, and both feet visible.",
     steps: [
-      { title: "Kamerani joylashtiring", description: "Kamera sizni yon tomondan ko‘rsin. O‘tirganingizda ham boshingiz va oyoqlaringiz kadrdan chiqmasin." },
-      { title: "Tik holatdan boshlang", description: "Oyoqlarni taxminan yelka kengligida qo‘ying. Harakatni tik turgan holatdan boshlang." },
-      { title: "Sekin pastga tushing", description: "Tizza va sonlarni bukib, nazorat bilan pastga tushing. Tovonlaringizni yerda saqlang." },
-      { title: "Boshlang‘ich holatga qayting", description: "Muvozanatni saqlagan holda yana tik turing. Harakat davomida butun tanangiz ko‘rinsin." },
+      { title: "Position your camera", description: "Position the camera to your side. Keep your head and feet in the frame, even as you lower your body." },
+      { title: "Start standing", description: "Place your feet about shoulder-width apart. Begin from a standing position." },
+      { title: "Lower with control", description: "Bend your knees and hips to lower your body with control. Keep your heels on the floor." },
+      { title: "Return to standing", description: "Keep your balance as you stand back up. Make sure your whole body remains visible." },
     ],
   },
   lunge: {
     title: "Lunge",
-    description: "Bu sahifa joyida bajariladigan Lunge mashqi uchun tayyorgarlikni ko‘rsatadi.",
-    cameraGuidance: "Kamera yon tomonda bo‘lsin. Oldingi va orqadagi oyoq, ayniqsa ikkala tizza, kadrga sig‘sin.",
+    description: "Prepare for stationary lunges with a stable split stance.",
+    cameraGuidance: "Use a side view. Keep your front and rear legs, especially both knees, in the frame.",
     steps: [
-      { title: "Kamerani joylashtiring", description: "Qurilmani yon tomonga qo‘ying. Ikkala oyog‘ingiz ham mashq davomida ko‘rinadigan masofani tanlang." },
-      { title: "Oyoqlarni ajrating", description: "Bir oyoqni oldinga, ikkinchisini orqaga qo‘ying. Muvozanatni ushlay oladigan holatni tanlang." },
-      { title: "Joyingizda pastga tushing", description: "Gavdani boshqargan holda ikkala tizzani bukib pastga tushing. Oyoqlaringizning joyini saqlang." },
-      { title: "Yuqori holatga qayting", description: "Sekin yuqoriga ko‘tariling. Bu variantda har bir takror orasida oldinga yurish shart emas." },
+      { title: "Position your camera", description: "Place your device to your side. Choose a distance where both legs remain visible throughout the movement." },
+      { title: "Set your split stance", description: "Place one foot forward and the other behind you. Choose a stance where you can keep your balance." },
+      { title: "Lower in place", description: "Bend both knees to lower your body with control. Keep your feet in their starting positions." },
+      { title: "Return to the upper position", description: "Rise slowly to your starting position. For this variation, you do not need to step forward between repetitions." },
     ],
   },
 };
@@ -65,11 +65,11 @@ function loadWorkout() {
   const parameters = new URLSearchParams(window.location.search);
   const exerciseId = parameters.get("exercise");
 
-  // Faqat belgilangan uchta mashq qabul qilinadi; noma'lum URL baholanmaydi.
+  // Accept only the three supported exercises; reject unknown exercise IDs.
   if (!Object.hasOwn(exerciseInstructions, exerciseId)) {
-    workoutTitle.textContent = "Mashq topilmadi";
-    workoutDescription.textContent = "Mashqlarga qaytib, Push Up, Squats yoki Lunge’ni tanlang.";
-    document.title = "Mashq topilmadi — Coach App";
+    workoutTitle.textContent = "Exercise not found";
+    workoutDescription.textContent = "Go back to exercises and choose Push Up, Squats, or Lunge.";
+    document.title = "Exercise not found — Coach App";
     return;
   }
 

@@ -1,31 +1,31 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Push Up, Squats yoki Lunge mashqini tanlang." />
-    <title>Coach App — mashq tanlash</title>
+    <meta name="description" content="Choose Push Up, Squats, or Lunge to get started." />
+    <title>Coach App — Choose your exercise</title>
     <link rel="stylesheet" href="../static/css/style.css" />
   </head>
   <body>
     <div class="page">
       <header class="header">
-        <a class="brand" href="index.html" aria-label="Coach App bosh sahifasi">
+        <a class="brand" href="index.html" aria-label="Coach App home">
           <span class="brand-symbol" aria-hidden="true">C<span>•</span></span>
           Coach App
         </a>
-        <span class="camera-status"><span aria-hidden="true"></span>Kamera o‘chiq</span>
+        <span class="camera-status"><span aria-hidden="true"></span>Camera off</span>
       </header>
 
       <main>
         <section class="intro" aria-labelledby="page-title">
-          <p class="eyebrow">BIRINCHI QADAM · MASHQ TANLASH</p>
-          <h1 id="page-title">Bugun qaysi mashqni<br />bajaramiz?</h1>
-          <p class="intro-description">Quyidagi mashqlardan birini tanlang.<br />Mashq sahifasida boshlash uchun ko‘rsatmalarni o‘qing.</p>
+          <p class="eyebrow">STEP ONE · CHOOSE YOUR EXERCISE</p>
+          <h1 id="page-title">How will you<br />move today?</h1>
+          <p class="intro-description">Choose an exercise below.<br />Read the setup instructions before you begin.</p>
         </section>
 
-        <!-- Har bir karta tegishli mashq sahifasini ochadi. -->
-        <nav class="exercise-grid" aria-label="Mashqlar">
+        <!-- Each card opens the instructions for its exercise. -->
+        <nav class="exercise-grid" aria-label="Exercises">
           <a class="exercise-card" href="workout.html?exercise=pushup">
             <span class="card-top"><span class="exercise-number">01</span></span>
             <svg class="exercise-drawing" viewBox="0 0 260 140" fill="none" aria-hidden="true">
@@ -36,8 +36,8 @@
               <circle class="joint" cx="112" cy="76" r="4" />
             </svg>
             <span class="exercise-name">Push Up</span>
-            <span class="exercise-translation">Otjimaniya</span>
-            <span class="card-bottom">Qo‘llar va tana<span class="card-arrow" aria-hidden="true">↗</span></span>
+            <span class="exercise-subtitle">Bodyweight press</span>
+            <span class="card-bottom">Upper body &amp; core<span class="card-arrow" aria-hidden="true">↗</span></span>
           </a>
 
           <a class="exercise-card" href="workout.html?exercise=squats">
@@ -50,8 +50,8 @@
               <circle class="joint" cx="112" cy="77" r="4" />
             </svg>
             <span class="exercise-name">Squats</span>
-            <span class="exercise-translation">O‘tirib-turish</span>
-            <span class="card-bottom">Oyoqlar va tana<span class="card-arrow" aria-hidden="true">↗</span></span>
+            <span class="exercise-subtitle">Bodyweight squat</span>
+            <span class="card-bottom">Legs &amp; core<span class="card-arrow" aria-hidden="true">↗</span></span>
           </a>
 
           <a class="exercise-card" href="workout.html?exercise=lunge">
@@ -64,15 +64,15 @@
               <circle class="joint" cx="127" cy="74" r="4" />
             </svg>
             <span class="exercise-name">Lunge</span>
-            <span class="exercise-translation">Bir oyoqda tushish</span>
-            <span class="card-bottom">Oyoqlar va muvozanat<span class="card-arrow" aria-hidden="true">↗</span></span>
+            <span class="exercise-subtitle">Stationary lunge</span>
+            <span class="card-bottom">Legs &amp; balance<span class="card-arrow" aria-hidden="true">↗</span></span>
           </a>
         </nav>
 
-        <p class="stage-note">Har bir mashq uchun kamera joylashuvi va boshlang‘ich holat bo‘yicha ko‘rsatmalar mavjud.</p>
+        <p class="stage-note">Each exercise includes camera placement and starting position instructions.</p>
       </main>
 
-      <footer><span>COACH APP</span><span>Kichik qadamlar. Tushunarli harakatlar.</span></footer>
+      <footer><span>COACH APP</span><span>Small steps. Clear movements.</span></footer>
     </div>
   </body>
 </html>

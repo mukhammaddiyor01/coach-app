@@ -1,18 +1,20 @@
 # Coach App
 
-Push Up, Squats va Lunge uchun mashq yordamchisi.
+An exercise coach for Push Up, Squats, and Lunge.
 
-## Hozir nima ishlaydi?
+## Current progress
 
-Ikkinchi bosqich tayyor: Push Up, Squats va Lunge kartalari alohida
-mashq sahifasini ochadi. Unda tanlangan mashqning ko‘rsatmalari va kamera
-joylashuvi ko‘rsatiladi. Boshqa mashqqa o‘tish va bosh sahifaga qaytish ishlaydi.
-Kamera tugmasi hozircha o‘chiq. FastAPI va takror sanash keyin qo‘shiladi.
-Noma’lum mashq manzili ochilsa, tushunarli xabar chiqadi.
+Stage two is complete. Each exercise card opens its own instruction page,
+including camera placement and starting position guidance. You can switch
+between exercises or return to the home page. An unknown exercise URL displays
+a clear error message.
 
-## Sahifani ochish
+The camera button is currently disabled. FastAPI page serving and repetition
+counting will be added in later stages. All project content is in English.
 
-VS Code terminalida:
+## Run the frontend
+
+Open the VS Code terminal and run:
 
 ```bash
 cd /Users/mukhammaddiyor/Desktop/coach-app
@@ -20,17 +22,18 @@ source .venv/bin/activate
 python -m http.server 5500 --bind 127.0.0.1 --directory frontend
 ```
 
-Brauzerda http://127.0.0.1:5500/templates/index.html ni oching.
-Serverni to‘xtatish: terminalda `Ctrl + C`.
-Hozirgi bosqichda Python'ning oddiy fayl serveridan foydalanamiz.
-FastAPI ishga tushirish buyrug‘i backend yaratilganda qo‘shiladi.
+Open http://127.0.0.1:5500/templates/index.html in your browser.
+Press `Ctrl + C` in the terminal to stop the server.
 
-## Fayllar
+This stage uses Python's built-in file server. The FastAPI run command will
+be added when the backend is implemented.
 
-- `frontend/templates/index.html` — sahifadagi yozuvlar va tugmalar.
-- `frontend/static/css/style.css` — sahifa ko‘rinishi.
-- `frontend/templates/workout.html` — tanlangan mashqning sahifasi.
-- `frontend/static/js/workout.js` — mashq nomi va ko‘rsatmalarini ko‘rsatish.
-- `AGENTS.md` — MVC, service layer va kichik commitlar qoidalari.
+## Files
 
-`backend/services/`, `backend/vision/` va `models/` hozircha bo‘sh.
+- `frontend/templates/index.html` — exercise selection page.
+- `frontend/templates/workout.html` — selected exercise page.
+- `frontend/static/css/style.css` — page styles.
+- `frontend/static/js/workout.js` — exercise instructions and page content.
+- `AGENTS.md` — MVC, service layer, and incremental commit rules.
+
+`backend/services/`, `backend/vision/`, and `models/` are currently empty.

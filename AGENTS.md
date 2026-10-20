@@ -101,7 +101,7 @@ Do not implement a second, separate repetition counter in the frontend.
 - Avoid vague names such as `x1`, `tmp`, or `val` in core calculations.
 - Each function must perform one understandable task. Split large functions
   into smaller functions.
-- Explain why a rule is needed with a short comment in Uzbek.
+- Explain why a rule is needed with a short comment in English.
 - Store angle thresholds in named settings; do not scatter them through the code.
 - Account for image width and height when working with image landmarks.
 - Keep counts and state separate for each camera session.
@@ -180,3 +180,11 @@ Do not accumulate unrelated changes, multiple large features, or the entire
 project into a single commit. Split larger work into small, independently
 verifiable steps and commit each completed step before starting the next.
 Stage only the files or hunks belonging to that logical change.
+
+
+## 11. Project Language
+
+Use English for the entire project: interface text, exercise instructions,
+page titles, accessibility labels, loading and error messages, code comments,
+and project documentation. Keep future additions in English as well.
+Conversation with the user may remain in Uzbek unless they request otherwise.

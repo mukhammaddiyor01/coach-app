@@ -1,4 +1,4 @@
-/* Umumiy ranglar va o'lchamlar bir joyda saqlanadi. */
+/* Keep shared colors and sizes in one place. */
 :root {
   --background: #f7f8f2;
   --surface: #ffffff;
@@ -35,7 +35,7 @@ a { color: inherit; }
 h1 { margin: 0; font-size: clamp(34px, 5vw, 54px); line-height: 1.12; font-weight: 650; letter-spacing: -2px; }
 .intro-description { margin: 20px 0 0; color: var(--muted); font-size: 15px; line-height: 1.7; }
 
-/* Mashq kartalari tegishli ko‘rsatmalar sahifasiga olib boradi. */
+/* Exercise cards link to their instruction pages. */
 .exercise-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
 .exercise-card { display: flex; flex-direction: column; padding: 20px 22px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); color: var(--text); text-align: left; cursor: pointer; transition: background 150ms, border-color 150ms; }
 .exercise-card:hover { border-color: #7a956a; background: #f0f6e8; }
@@ -47,7 +47,7 @@ h1 { margin: 0; font-size: clamp(34px, 5vw, 54px); line-height: 1.12; font-weigh
 .exercise-drawing .secondary-limb { opacity: 0.4; stroke-width: 4; }
 .exercise-drawing .joint { fill: var(--accent); stroke-width: 2; }
 .exercise-name { font-size: 26px; font-weight: 650; letter-spacing: -0.7px; }
-.exercise-translation { color: var(--muted); font-size: 14px; }
+.exercise-subtitle { color: var(--muted); font-size: 14px; }
 .card-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; padding-top: 14px; border-top: 1px solid #d1ddc9; font-size: 12px; }
 .card-arrow { font-size: 20px; }
 
@@ -69,7 +69,7 @@ footer span:first-child { font-weight: 700; letter-spacing: 1px; }
   .exercise-card { transition: none; }
 }
 
-/* Mashq sahifasidagi ko'rsatmalar va tayyorgarlik paneli. */
+/* Instructions and preparation panel on the workout page. */
 .exercise-card { text-decoration: none; }
 .exercise-tabs a:focus-visible, .back-link:focus-visible { outline: 3px solid var(--text); outline-offset: 4px; }
 .back-link { display: inline-block; margin-top: 28px; font-size: 13px; text-decoration: none; }
