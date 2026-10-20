@@ -6,11 +6,11 @@ Build a small camera-based project for Push Up, Squats, and Lunge exercises.
 The user selects an exercise and turns on the camera. The app counts
 repetitions and provides feedback on the posture features it can observe.
 
-The current stage is limited to project structure, the virtual environment,
-and package installation. Do not write application code until the user asks
-to proceed to the next stage.
-The `.py`, `.html`, `.css`, and `.js` filenames below are planned files;
-they have not been created yet.
+The user has authorized starting implementation. The current milestone is
+stage 1: a simple exercise-selection page with Push Up, Squats, and Lunge
+buttons. Implement only this milestone; later stages require user authorization.
+The structure below is the target plan. Some files exist; create the remaining
+files only when their implementation stage is authorized.
 Work only inside /Users/mukhammaddiyor/Desktop/coach-app.
 
 ## 2. Selected Technologies
