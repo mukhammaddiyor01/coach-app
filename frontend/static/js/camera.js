@@ -58,6 +58,14 @@ function stopCamera() {
   showCameraState("off", "Camera stopped. Press Start camera when you are ready.");
 }
 
+function stopCameraWhenTabIsHidden() {
+  if (!document.hidden) {
+    return;
+  }
+
+  stopCamera();
+}
+
 function getCameraErrorMessage(error) {
   const messages = {
     NotAllowedError: "Camera access was denied. Allow camera access in your browser and try again.",
@@ -139,3 +147,4 @@ async function startCamera() {
 startCameraButton.addEventListener("click", startCamera);
 stopCameraButton.addEventListener("click", stopCamera);
 window.addEventListener("pagehide", stopCamera);
+document.addEventListener("visibilitychange", stopCameraWhenTabIsHidden);

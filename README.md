@@ -7,7 +7,8 @@ An exercise coach for Push Up, Squats, and Lunge.
 Stage four is complete. FastAPI serves exercise pages using Jinja2 templates.
 Each workout page has Start camera and Stop camera controls with a live preview.
 Camera access is requested only after pressing Start camera. The app stops its
-camera tracks when you press Stop camera or leave the workout page.
+camera tracks when you press Stop camera, leave the workout page, or hide the
+tab. Returning to the tab does not restart the camera automatically.
 
 Permission errors, missing cameras, and disconnected cameras display clear
 messages and allow another attempt. Stop camera also cancels a pending start;
@@ -81,7 +82,8 @@ Exercise calculations will belong in services, separate from page content.
 2. Press Start camera and allow camera access in your browser.
 3. Check that the live preview appears and the header says Camera on.
 4. Press Stop camera. The preview should close and the header should say Camera off.
-5. Start again, then switch exercises or return home. The camera should stop.
+5. Start again, then switch exercises, return home, or switch to another tab.
+   The camera should stop. Return and press Start camera to use it again.
 6. If permission is denied, allow it in your browser settings and try again.
 
 Use the localhost address above, or HTTPS when deploying the app.
@@ -97,7 +99,8 @@ node --test tests/camera.test.cjs
 
 Node.js is used only for these tests; the application backend remains Python.
 The tests cover start and stop, permission errors and retry, duplicate starts,
-late permission results, page navigation, playback failure, and disconnection.
+late permission results, page navigation, hidden tabs, playback failure, and
+disconnection.
 Real camera permissions and device behavior still need a check in your browser.
 
 

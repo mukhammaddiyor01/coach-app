@@ -63,6 +63,7 @@ function createPage(options = {}) {
   ];
   const elements = Object.fromEntries(ids.map((id) => [id, createElement()]));
   const pageEvents = new Map();
+  const documentEvents = new Map();
   const stream = createStream();
   let permissionRequests = 0;
   let constraints;
@@ -79,8 +80,14 @@ function createPage(options = {}) {
     },
   };
 
+  const document = {
+    hidden: false,
+    querySelector: (selector) => elements[selector.slice(1)],
+    addEventListener: (event, listener) => documentEvents.set(event, listener),
+  };
+
   vm.runInNewContext(cameraScript, {
-    document: { querySelector: (selector) => elements[selector.slice(1)] },
+    document,
     navigator: { mediaDevices: options.unsupported ? undefined : mediaDevices },
     window: { addEventListener: (event, listener) => pageEvents.set(event, listener) },
   });
@@ -91,6 +98,10 @@ function createPage(options = {}) {
     start: () => elements["start-camera"].emit("click"),
     stop: () => elements["stop-camera"].emit("click"),
     leave: () => pageEvents.get("pagehide")(),
+    setTabHidden(hidden) {
+      document.hidden = hidden;
+      documentEvents.get("visibilitychange")();
+    },
     get permissionRequests() {
       return permissionRequests;
     },
@@ -284,4 +295,40 @@ test("a camera lost during startup is not reported as active", async () => {
   assert.equal(page.state, "error");
   assert.match(page.message, /disconnected/);
   assert.equal(page.elements["camera-video"].srcObject, null);
+});
+
+
+test("switching away from the tab stops the active camera", async () => {
+  const page = createPage();
+  await page.start();
+  page.setTabHidden(true);
+
+  assert.equal(page.state, "off");
+  assert.equal(page.stream.track.stopCount, 1);
+  assert.equal(page.elements["camera-video"].srcObject, null);
+
+  page.setTabHidden(false);
+  assert.equal(page.permissionRequests, 1);
+  assert.equal(page.state, "off");
+});
+
+test("hiding the tab cancels a pending camera request", async () => {
+  const permission = createDeferred();
+  const page = createPage({ getUserMedia: () => permission.promise });
+  const starting = page.start();
+  page.setTabHidden(true);
+  permission.resolve(page.stream);
+  await starting;
+
+  assert.equal(page.stream.track.stopCount, 1);
+  assert.equal(page.state, "off");
+});
+
+test("a visible-tab notification does not stop an active camera", async () => {
+  const page = createPage();
+  await page.start();
+  page.setTabHidden(false);
+  assert.equal(page.state, "on");
+  assert.equal(page.stream.track.stopCount, 0);
+  page.stop();
 });
