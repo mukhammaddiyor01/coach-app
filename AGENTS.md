@@ -7,8 +7,9 @@ The user selects an exercise and turns on the camera. The app counts
 repetitions and provides feedback on the posture features it can observe.
 
 The user has authorized starting implementation. The current milestone is
-stage 5: detect body landmarks with MediaPipe on the local Python backend
-and display them over the camera preview. Repetition counting comes later.
+stage 6: implement and verify Push Up repetition counting in plain Python
+services, then connect per-camera session results to the interface.
+Squats and Lunge counting come in a later milestone.
 Implement only this milestone; later stages require user authorization.
 The structure below is the target plan. Some files exist; create the remaining
 files only when their implementation stage is authorized.
