@@ -1,4 +1,4 @@
-"""Page controllers: validate the exercise and render its HTML template."""
+"""Controllers coordinate pages, local vision, and exercise services."""
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -8,7 +8,11 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from backend.exercises import EXERCISES
-from backend.schemas import PoseResult
+from backend.schemas import PoseResult, PushUpResult, SessionResult
+from backend.services.pushup_service import InvalidLandmarksError
+from backend.workout_sessions import (
+    SessionLimitError, SessionNotFoundError, WorkoutSessions, get_workout_sessions,
+)
 from backend.vision.pose_detector import (
     MAX_FRAME_BYTES,
     InvalidFrameError,
@@ -54,7 +58,7 @@ def workout(request: Request, exercise_id: str):
     )
 
 
-def validate_frame_request(request: Request):
+def validate_camera_request(request: Request):
     # A custom header prevents another website from submitting a simple form.
     if request.headers.get("x-coach-camera") != "1":
         raise HTTPException(status_code=403, detail="Use this app's camera controls.")
@@ -62,8 +66,12 @@ def validate_frame_request(request: Request):
     origin = request.headers.get("origin")
     expected_origin = str(request.base_url).rstrip("/")
     if origin is not None and origin != expected_origin:
-        raise HTTPException(status_code=403, detail="Cross-origin frame requests are blocked.")
+        raise HTTPException(status_code=403, detail="Cross-origin camera requests are blocked.")
 
+
+
+def validate_frame_request(request: Request):
+    validate_camera_request(request)
     content_type = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
     if content_type != "image/jpeg":
         raise HTTPException(status_code=415, detail="Send an image/jpeg frame.")
@@ -102,8 +110,13 @@ async def detect_pose(
     validate_frame_request(request)
     frame_bytes = await read_frame(request)
 
+    return await run_frame_analysis(detector.detect, frame_bytes)
+
+
+async def run_frame_analysis(operation, *arguments):
+    """Translate adapter and service failures into safe HTTP responses."""
     try:
-        return await run_in_threadpool(detector.detect, frame_bytes)
+        return await run_in_threadpool(operation, *arguments)
     except InvalidFrameError as error:
         raise HTTPException(status_code=400, detail=str(error)) from None
     except ModelUnavailableError as error:
@@ -116,3 +129,51 @@ async def detect_pose(
         ) from None
     except PoseDetectionError:
         raise HTTPException(status_code=503, detail="Body detection is temporarily unavailable.") from None
+
+    except InvalidLandmarksError:
+        raise HTTPException(status_code=503, detail="Body tracking could not be evaluated. Try again.") from None
+
+
+@router.post("/api/pushup/session", response_model=SessionResult, status_code=201)
+def create_pushup_session(
+    request: Request,
+    sessions: WorkoutSessions = Depends(get_workout_sessions),
+):
+    validate_camera_request(request)
+    try:
+        token, workout = sessions.create()
+    except SessionLimitError as error:
+        raise HTTPException(status_code=429, detail=str(error)) from None
+    return {"session_id": token, "workout": workout}
+
+
+def read_session_token(request: Request):
+    token = request.headers.get("x-coach-session", "")
+    if len(token) != 32 or any(character not in "0123456789abcdef" for character in token):
+        raise HTTPException(status_code=404, detail="Camera session ended. Start the camera again.")
+    return token
+
+
+@router.delete("/api/pushup/session", status_code=204)
+def close_pushup_session(
+    request: Request,
+    sessions: WorkoutSessions = Depends(get_workout_sessions),
+):
+    validate_camera_request(request)
+    sessions.close(read_session_token(request))
+
+
+@router.post("/api/pushup/frame", response_model=PushUpResult)
+async def analyze_pushup_frame(
+    request: Request,
+    detector: PoseDetector = Depends(get_pose_detector),
+    sessions: WorkoutSessions = Depends(get_workout_sessions),
+):
+    validate_frame_request(request)
+    token = read_session_token(request)
+    try:
+        session = sessions.get(token)
+    except SessionNotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from None
+    frame = await read_frame(request)
+    return await run_frame_analysis(session.analyze, detector, frame)
