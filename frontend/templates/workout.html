@@ -53,6 +53,14 @@
               </div>
               <h2 id="camera-title">Get camera ready</h2>
               <p id="camera-guidance">{{ exercise.camera_guidance }}</p>
+              <div class="camera-choice">
+                <label for="camera-facing">Camera</label>
+                <select id="camera-facing" aria-describedby="camera-choice-note">
+                  <option value="user">Front camera</option>
+                  <option value="environment">Rear camera</option>
+                </select>
+                <p id="camera-choice-note" class="stage-note">Choose before starting. Stop the camera to change it. Your browser may use the available camera.</p>
+              </div>
               <div class="camera-controls">
                 <button id="start-camera" class="start-button" type="button" aria-describedby="camera-message">Start camera</button>
                 <button id="stop-camera" class="stop-button" type="button" disabled>Stop camera</button>

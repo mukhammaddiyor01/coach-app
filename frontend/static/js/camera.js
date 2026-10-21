@@ -8,6 +8,7 @@ const cameraStatus = document.querySelector("#camera-status");
 const cameraStatusText = document.querySelector("#camera-status-text");
 const startCameraButton = document.querySelector("#start-camera");
 const stopCameraButton = document.querySelector("#stop-camera");
+const cameraFacingSelect = document.querySelector("#camera-facing");
 
 const CAMERA_CONSTRAINTS = {
   video: { width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -40,6 +41,9 @@ function showCameraState(state, message) {
   startCameraButton.disabled = isStarting || isCameraOn;
   startCameraButton.textContent = isStarting ? "Starting…" : "Start camera";
   stopCameraButton.disabled = !isStarting && !isCameraOn;
+  if (cameraFacingSelect) {
+    cameraFacingSelect.disabled = isStarting || isCameraOn;
+  }
 }
 
 function stopStreamTracks(stream) {
@@ -94,6 +98,18 @@ function handleCameraDisconnected(requestId) {
   showCameraState("error", "The camera was disconnected. Reconnect it and press Start camera.");
 }
 
+function getCameraConstraints() {
+  const facingMode = cameraFacingSelect?.value === "environment" ? "environment" : "user";
+  return {
+    ...CAMERA_CONSTRAINTS,
+    video: {
+      ...CAMERA_CONSTRAINTS.video,
+      // A preference allows laptops and single-camera phones to use their available camera.
+      facingMode: { ideal: facingMode },
+    },
+  };
+}
+
 async function startCamera() {
   if (cameraState === "starting" || cameraState === "on") {
     return;
@@ -109,7 +125,7 @@ async function startCamera() {
   showCameraState("starting", "Allow camera access in your browser, or press Stop camera to cancel.");
 
   try {
-    requestedStream = await navigator.mediaDevices.getUserMedia(CAMERA_CONSTRAINTS);
+    requestedStream = await navigator.mediaDevices.getUserMedia(getCameraConstraints());
 
     if (requestId !== cameraRequestId) {
       stopStreamTracks(requestedStream);

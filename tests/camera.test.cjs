@@ -59,9 +59,10 @@ function createDeferred() {
 function createPage(options = {}) {
   const ids = [
     "camera-stage", "camera-video", "camera-placeholder", "camera-title", "camera-message",
-    "camera-status", "camera-status-text", "start-camera", "stop-camera",
+    "camera-status", "camera-status-text", "start-camera", "stop-camera", "camera-facing",
   ];
   const elements = Object.fromEntries(ids.map((id) => [id, createElement()]));
+  elements["camera-facing"].value = options.facing || "user";
   const pageEvents = new Map();
   const documentEvents = new Map();
   const stream = createStream();
@@ -364,4 +365,53 @@ test("camera can still be stopped if the analysis script did not load", async ()
   page.stop();
   assert.equal(page.state, "off");
   assert.equal(page.stream.track.stopCount, 1);
+});
+
+
+test("front camera is preferred without requiring it or microphone access", async () => {
+  const page = createPage();
+  await page.start();
+  assert.equal(page.constraints.video.facingMode.ideal, "user");
+  assert.equal(page.constraints.video.facingMode.exact, undefined);
+  assert.equal(page.constraints.audio, false);
+  assert.equal(page.elements["camera-facing"].disabled, true);
+  page.stop();
+  assert.equal(page.elements["camera-facing"].disabled, false);
+});
+
+test("choosing rear camera sends that preference only after pressing Start", async () => {
+  const page = createPage({ facing: "environment", getUserMedia: async () => createStream() });
+  assert.equal(page.permissionRequests, 0);
+  await page.start();
+  assert.equal(page.constraints.video.facingMode.ideal, "environment");
+  assert.equal(page.permissionRequests, 1);
+  page.stop();
+  page.elements["camera-facing"].value = "user";
+  assert.equal(page.permissionRequests, 1);
+  await page.start();
+  assert.equal(page.constraints.video.facingMode.ideal, "user");
+  assert.equal(page.permissionRequests, 2);
+  page.stop();
+});
+
+test("camera choice is locked while permission is pending and unlocked by Stop", async () => {
+  const permission = createDeferred();
+  const page = createPage({ getUserMedia: () => permission.promise });
+  const starting = page.start();
+  assert.equal(page.elements["camera-facing"].disabled, true);
+  page.stop();
+  assert.equal(page.elements["camera-facing"].disabled, false);
+  permission.resolve(page.stream);
+  await starting;
+  assert.equal(page.state, "off");
+  assert.equal(page.stream.track.stopCount, 1);
+});
+
+test("camera errors unlock the choice for another attempt", async () => {
+  const page = createPage({ getUserMedia: async () => {
+    throw Object.assign(new Error("unavailable"), { name: "NotReadableError" });
+  } });
+  await page.start();
+  assert.equal(page.state, "error");
+  assert.equal(page.elements["camera-facing"].disabled, false);
 });

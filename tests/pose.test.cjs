@@ -468,3 +468,36 @@ for (const exercise of ["squats", "lunge"]) {
     page.stop();
   });
 }
+
+
+test("portrait capture and a later landscape frame keep landmarks aligned", async () => {
+  let frameNumber = 0;
+  const page = createPosePage({ fetch: async () => {
+    const result = makePoseResult();
+    if (++frameNumber === 1) {
+      result.width = 360;
+      result.height = 640;
+    }
+    return makeResponse(result);
+  } });
+  page.video.videoWidth = 720;
+  page.video.videoHeight = 1280;
+  await page.start();
+  assert.equal(page.capture.width, 360);
+  assert.equal(page.capture.height, 640);
+  assert.equal(page.overlay.width, 360);
+  assert.equal(page.overlay.height, 640);
+  assert.deepEqual(page.dots.at(-1), [180, 320]);
+
+  page.video.videoWidth = 1280;
+  page.video.videoHeight = 720;
+  const [timerId, timer] = [...page.timers.entries()].find(([, timer]) => timer.delay === 200);
+  page.timers.delete(timerId);
+  await timer.callback();
+  assert.equal(page.capture.width, 640);
+  assert.equal(page.capture.height, 360);
+  assert.equal(page.overlay.width, 640);
+  assert.equal(page.overlay.height, 360);
+  assert.deepEqual(page.dots.at(-1), [320, 180]);
+  page.stop();
+});
