@@ -6,7 +6,9 @@ A local exercise coach for Push Up, Squats, and Lunge.
 
 Stage seven is implemented: Push Up, Squats, and stationary Lunge each have
 a separate plain Python counting service. All three pages display the count,
-position, relevant angles, guidance, and a Reset count button. Detailed posture
+position, relevant angles, guidance, and a Reset count button. The pages now
+include a phone layout, touch-friendly controls, and front/rear camera preferences.
+Detailed posture
 feedback is a later milestone. The app cannot check every technique error.
 
 Choose an exercise, read its setup instructions, and press Start camera.
@@ -73,6 +75,46 @@ Open http://127.0.0.1:8000 in your browser.
 Press `Ctrl + C` in the terminal to stop the server.
 Use localhost or HTTPS for browser camera access. The first analysis request
 can take a few seconds while the model loads.
+
+## Mobile web
+
+The phone layout puts the camera and results before detailed instructions.
+Exercise cards become compact rows, exercise tabs share the screen width, and
+Start/Stop/Reset controls have large touch targets. Safe-area padding accounts
+for screen cutouts. Video uses its native aspect ratio with a viewport-height
+limit, so portrait and landscape frames remain fully visible. The landmark
+canvas uses the same contained alignment as the video. Browser zoom stays enabled.
+
+Choose Front camera or Rear camera before pressing Start camera. The selection
+is a preference: a single-camera device may use its available camera. Stop the
+camera before changing the choice. Camera permission is requested only after
+Start, and microphone access remains disabled. Counting still runs in Python.
+
+The responsive design does not make this localhost server reachable from a
+phone. On the phone, `127.0.0.1` and `localhost` refer to the phone itself.
+The current backend intentionally accepts only localhost hosts and binds to
+loopback. No public deployment, tunnel, or network exposure is configured.
+
+To use a separate phone camera with this computer's backend, a separate private
+HTTPS setup is needed, with a certificate trusted by the phone and matching
+host/origin handling. Ordinary HTTP over a computer's LAN address is not enough
+for browser camera access. See [MDN camera security requirements](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia#privacy_and_security).
+
+Manual mobile checks remain necessary:
+
+1. Preview widths of 320, 375, 390, 430, 768, and 1024 pixels. Confirm there is no
+   horizontal page scrolling, clipped text, or overlapping controls.
+2. Use browser text zoom and confirm that all controls remain reachable.
+3. On a phone using a trusted HTTPS connection, choose each camera preference,
+   press Start, and confirm that Stop releases it before selecting another.
+4. Rotate portrait/landscape with the camera running. Video should remain fully
+   visible and landmarks should stay aligned with the body.
+5. Hide the tab or lock the phone. The camera should stop; returning should
+   require an explicit Start. Verify counts and Reset for all three exercises.
+
+Automated checks cover camera preferences, permission races, and portrait to
+landscape frame dimensions. HTML rendering is checked, but the phone layout
+has not been visually verified in a connected browser or on a physical phone.
 
 ## Clear responsibilities
 
