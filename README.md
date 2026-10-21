@@ -1,167 +1,131 @@
 # Coach App
 
-An exercise coach for Push Up, Squats, and Lunge.
+A local exercise coach for Push Up, Squats, and Lunge.
 
 ## Current progress
 
-Stage four is complete. FastAPI serves exercise pages using Jinja2 templates.
-Each workout page has Start camera and Stop camera controls with a live preview.
-Camera access is requested only after pressing Start camera. The app stops its
-camera tracks when you press Stop camera, leave the workout page, or hide the
-tab. Returning to the tab does not restart the camera automatically.
+Stage five is complete: the app detects body landmarks with MediaPipe and draws
+them over the camera preview. It does not count repetitions or judge exercise
+technique yet. Those rules will be added separately in Python services.
 
-Permission errors, missing cameras, and disconnected cameras display clear
-messages and allow another attempt. Stop camera also cancels a pending start;
-the browser permission prompt may still need a response, but its late result
-will not reopen the preview.
+Choose an exercise, read its setup instructions, and press Start camera.
+Sampled JPEG frames are sent only to the Python server on this computer.
+MediaPipe returns body landmarks; the browser draws visible points and lines.
+If no body is found, the app asks you to move into view.
 
-The preview stays in your browser. This stage does not request microphone
-access, record video, upload frames, or analyze exercises. Body landmark
-detection and repetition counting come in later stages.
+Stop camera, leave the page, or hide the tab to stop both the camera and analysis.
+Returning to a tab does not automatically restart them. Permission errors and
+camera disconnections have readable messages and can be retried.
 
-All project content is in English. Instructions remain readable without
-JavaScript; the camera controls require JavaScript.
+## Install and download the model
 
-## Install dependencies
-
-From the project directory:
+In a terminal opened at the project root:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
+python download_model.py
 ```
 
 If `.venv` already exists, activate it and install the requirements.
+The downloader uses Google's official versioned MediaPipe model URL. The model
+is kept in `models/pose_landmarker.task`, outside public static files and Git.
+The download contains model weights, not camera data. Once installed, inference
+does not need an external image or AI service.
 
 ## Run the app
 
-Open the VS Code terminal and run:
+From the project root:
 
 ```bash
-cd /path/to/coach-app
 source .venv/bin/activate
 python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000 --no-access-log
 ```
 
 Open http://127.0.0.1:8000 in your browser.
 Press `Ctrl + C` in the terminal to stop the server.
+Use localhost or HTTPS for browser camera access. The first analysis request
+can take a few seconds while the model loads.
 
-The old `python -m http.server` command is no longer used because the HTML
-files are now Jinja2 templates that must be rendered by FastAPI.
+## Clear responsibilities
 
-## Files and request flow
-
-- `backend/main.py` — creates FastAPI and connects static files and routes.
-- `backend/routes.py` — page controllers and exercise ID validation.
-- `backend/security.py` — HTTP policies and allowed public asset types.
+- `backend/main.py` — create the app and close the detector on shutdown.
+- `backend/routes.py` — page controllers, request validation, and HTTP responses.
+- `backend/schemas.py` — the public landmark response format.
 - `backend/exercises.py` — exercise names and display instructions.
-- `frontend/templates/index.html` — exercise selection template.
-- `frontend/templates/workout.html` — selected exercise template.
-- `frontend/static/css/style.css` — page styles.
-- `frontend/static/js/camera.js` — camera start, stop, status, and error handling.
-- `tests/camera.test.cjs` — camera lifecycle tests using simulated devices.
-- `AGENTS.md` — MVC, service layer, and incremental commit rules.
+- `backend/vision/pose_detector.py` — JPEG decoding and MediaPipe inference.
+- `backend/security.py` — HTTP policies and allowed public assets.
+- `frontend/templates/` — page layout and setup instructions.
+- `frontend/static/js/camera.js` — camera permission, start, and stop.
+- `frontend/static/js/pose.js` — sample frames, call the local API, draw landmarks.
+- `backend/services/` — reserved for exercise rules in the next stages.
 
-Page flow: browser → controller → HTML template → browser.
-Exercise calculations will belong in services, separate from page content.
+Current flow:
+Camera → local controller → vision adapter → landmarks → browser overlay.
+The frontend does not calculate angles or count repetitions.
 
-## Pages
+## Frame limits and session handling
 
-- `/` — choose an exercise.
-- `/workout/pushup` — Push Up instructions.
-- `/workout/squats` — Squats instructions.
-- `/workout/lunge` — Lunge instructions.
+`POST /api/pose` accepts only JPEG frames, up to 1 MB and 1280 pixels per side.
+The frontend samples at most 640 pixels per side and waits for each response
+before sending another frame. Inference uses independent-image mode, so one
+user's video history is not reused for another. An overlapping frame receives
+a busy response rather than creating an inference queue.
 
-`backend/services/`, `backend/vision/`, and `models/` are currently empty.
+Only frames from this app's camera controls are accepted. Foreign origins and
+requests without the custom camera header are rejected. A successful response
+contains dimensions and up to 33 landmarks; no body is a normal empty result.
 
+## Privacy
 
-## Try the camera
+- Camera frames and landmarks are processed in memory and are not saved.
+- No microphone access, recordings, analytics, or third-party frame uploads.
+- Sampled canvas pixels and displayed landmarks are cleared when analysis stops.
+- Credentials belong in local environment variables or an ignored `.env` file.
+  Never put real values in HTML, JavaScript, documentation, or screenshots.
+- Logs, databases, keys, and private capture folders are ignored by Git.
+  `.env.example`, if created, must contain empty placeholders only.
+- Static serving blocks dotfiles, recordings, models, databases, and key files.
+- Browser policies restrict connections to this app and block framing,
+  microphone access, and location access.
+- Responses use no-store caching and no-referrer policies. Debug mode and API
+  documentation are disabled. The run command disables request access logs.
+- Only localhost and 127.0.0.1 hosts are allowed. Keep the server bound to
+  127.0.0.1; host validation is not network access control or authentication.
 
-1. Start the app and open a workout page.
-2. Press Start camera and allow camera access in your browser.
-3. Check that the live preview appears and the header says Camera on.
-4. Press Stop camera. The preview should close and the header should say Camera off.
-5. Start again, then switch exercises, return home, or switch to another tab.
-   The camera should stop. Return and press Start camera to use it again.
-6. If permission is denied, allow it in your browser settings and try again.
+Review staged files before each commit. Ignore rules cannot remove credentials
+from existing commits. If a real credential was committed, rotate it and clean
+history before publishing. Do not expose this local prototype publicly without
+an explicit access-control and data-handling review.
 
-Use the localhost address above, or HTTPS when deploying the app.
-If another app is using your camera, close it before trying again.
+## Verify in your browser
 
-## Camera tests
+1. Open a workout page and allow camera access after pressing Start camera.
+2. Keep your whole body visible. Look for body landmarks over the video.
+3. Move out of view. Old landmarks should disappear.
+4. Press Stop camera. The preview and analysis should stop.
+5. Start again, then switch exercises, return home, or hide the tab.
+6. If model setup fails, run `python download_model.py` and restart the camera.
 
-With Node.js installed, run the frontend lifecycle tests without using a camera:
+Automatic checks use simulated cameras and public test images, not your webcam.
+Real camera permissions and device behavior still need this browser check.
 
-```bash
-node --test tests/camera.test.cjs
-```
+## Automated checks
 
-Node.js is used only for these tests; the application backend remains Python.
-The tests cover start and stop, permission errors and retry, duplicate starts,
-late permission results, page navigation, hidden tabs, playback failure, and
-disconnection.
-Real camera permissions and device behavior still need a check in your browser.
-
-
-## Confidential files
-
-Keep credentials in local environment variables or an ignored `.env` file.
-Do not add real values to HTML, JavaScript, documentation, or screenshots.
-Only empty configuration examples may be committed as `.env.example`.
-Logs, databases, private data folders, and camera captures are ignored by Git.
-Review staged files before every commit: ignore rules do not remove old commits
-or files that are already tracked.
-
-
-## Local HTTP privacy protections
-
-- Only localhost and 127.0.0.1 hostnames are accepted. Keep the server bound to
-  127.0.0.1; host validation is not a replacement for network access controls.
-- Browser policies restrict scripts, styles, images, and connections to this app
-  and disallow framing. The camera is allowed for this origin; microphone and
-  location access are blocked.
-- Responses use `Cache-Control: no-store` and `Referrer-Policy: no-referrer`.
-- Static serving allows only public CSS, JavaScript, image, and font file types.
-  Dotfiles, recordings, model files, databases, and key files are not served.
-- Debug mode and API documentation endpoints are disabled.
-- The run command disables request access logs so URLs are not written there.
-
-These protections apply to this local prototype. Do not publish it as a public
-service without adding appropriate authentication and reviewing data handling.
-If a real credential was ever committed, ignoring the file is not sufficient:
-rotate the credential and remove it from history before publishing.
-
-## HTTP privacy tests
-
-Install the optional test dependency and run the checks:
+Install the optional HTTP test dependency:
 
 ```bash
 python -m pip install -r requirements-dev.txt
 python -m unittest discover -s tests -p 'test_*.py'
 ```
 
-These tests use an in-process client and temporary dummy files. They do not
-access the camera or transmit project data to external services.
-
-## Local pose model
-
-Download the versioned model from Google's official MediaPipe model storage:
+With Node.js installed, run frontend lifecycle and rendering checks:
 
 ```bash
-python download_model.py
+node --test tests/camera.test.cjs tests/pose.test.cjs
 ```
 
-The model is saved under `models/`, outside the public static directory, and
-is ignored by Git. This download contains model weights, not camera data.
-`backend/vision/pose_detector.py` converts bounded JPEG frames into landmarks.
-It uses independent-image mode so no user's video history is shared.
-
-### Local frame endpoint
-
-`POST /api/pose` accepts a JPEG frame up to 1 MB and 1280 pixels per side.
-It requires the app's `X-Coach-Camera` header and rejects foreign origins.
-The response contains only frame dimensions and landmarks, with an empty
-landmark list when no body is found. Frames are processed in memory; no upload
-files, recordings, or landmark history are saved. Overlapping inference receives
-a busy response instead of building a queue of camera frames.
+Node.js is only used for tests. The app backend remains Python.
+The local adapter and real API have also been checked with Google's public
+MediaPipe pose sample (33 landmarks) and a blank image (no body).

@@ -1,4 +1,5 @@
 // Camera controls only. Exercise rules and repetition counts belong in Python.
+const cameraStage = document.querySelector("#camera-stage");
 const cameraVideo = document.querySelector("#camera-video");
 const cameraPlaceholder = document.querySelector("#camera-placeholder");
 const cameraTitle = document.querySelector("#camera-title");
@@ -34,6 +35,7 @@ function showCameraState(state, message) {
   cameraTitle.textContent = isCameraOn ? "Live camera" : "Get camera ready";
   cameraMessage.textContent = message;
   cameraVideo.hidden = !isCameraOn;
+  cameraStage.hidden = !isCameraOn;
   cameraPlaceholder.hidden = isCameraOn;
   startCameraButton.disabled = isStarting || isCameraOn;
   startCameraButton.textContent = isStarting ? "Starting…" : "Start camera";
@@ -56,6 +58,11 @@ function stopCamera() {
   cameraVideo.pause();
   cameraVideo.srcObject = null;
   showCameraState("off", "Camera stopped. Press Start camera when you are ready.");
+
+  // Release camera hardware even if the analysis script did not load.
+  if (typeof stopPoseDetection === "function") {
+    stopPoseDetection();
+  }
 }
 
 function stopCameraWhenTabIsHidden() {
@@ -129,7 +136,12 @@ async function startCamera() {
       track.addEventListener("ended", () => handleCameraDisconnected(requestId), { once: true });
     });
 
-    showCameraState("on", "Keep your whole body in view. Exercise analysis is not connected yet.");
+    showCameraState("on", "Keep your whole body in view for local body detection.");
+    if (typeof startPoseDetection === "function") {
+      startPoseDetection();
+    } else {
+      cameraMessage.textContent = "Live preview is available, but body detection did not load. Refresh the page.";
+    }
   } catch (error) {
     stopStreamTracks(requestedStream);
 

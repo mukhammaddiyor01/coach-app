@@ -58,7 +58,7 @@ function createDeferred() {
 
 function createPage(options = {}) {
   const ids = [
-    "camera-video", "camera-placeholder", "camera-title", "camera-message",
+    "camera-stage", "camera-video", "camera-placeholder", "camera-title", "camera-message",
     "camera-status", "camera-status-text", "start-camera", "stop-camera",
   ];
   const elements = Object.fromEntries(ids.map((id) => [id, createElement()]));
@@ -89,6 +89,8 @@ function createPage(options = {}) {
   vm.runInNewContext(cameraScript, {
     document,
     navigator: { mediaDevices: options.unsupported ? undefined : mediaDevices },
+    startPoseDetection: options.missingAnalysis ? undefined : options.startPoseDetection || (() => {}),
+    stopPoseDetection: options.missingAnalysis ? undefined : options.stopPoseDetection || (() => {}),
     window: { addEventListener: (event, listener) => pageEvents.set(event, listener) },
   });
 
@@ -331,4 +333,35 @@ test("a visible-tab notification does not stop an active camera", async () => {
   assert.equal(page.state, "on");
   assert.equal(page.stream.track.stopCount, 0);
   page.stop();
+});
+
+
+test("camera start and stop also start and stop body detection", async () => {
+  let starts = 0;
+  let stops = 0;
+  const page = createPage({
+    startPoseDetection: () => {
+      starts += 1;
+    },
+    stopPoseDetection: () => {
+      stops += 1;
+    },
+  });
+  await page.start();
+  assert.equal(starts, 1);
+  assert.equal(page.elements["camera-stage"].hidden, false);
+  page.stop();
+  assert.equal(stops, 1);
+  assert.equal(page.elements["camera-stage"].hidden, true);
+});
+
+
+test("camera can still be stopped if the analysis script did not load", async () => {
+  const page = createPage({ missingAnalysis: true });
+  await page.start();
+  assert.equal(page.state, "on");
+  assert.match(page.message, /body detection did not load/);
+  page.stop();
+  assert.equal(page.state, "off");
+  assert.equal(page.stream.track.stopCount, 1);
 });
