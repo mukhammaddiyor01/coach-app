@@ -154,7 +154,7 @@ function drawPoseLandmarks(result) {
   }
 
   poseMessage.textContent = visibleLandmarks.length
-    ? `Body detected · ${visibleLandmarks.length} visible landmarks.${workoutControls ? "" : " Repetition counting comes later."}`
+    ? `Body detected · ${visibleLandmarks.length} visible landmarks.${workoutControls ? "" : " Counting controls are unavailable. Reload the page."}`
     : "No visible body landmarks. Move back so your whole body is in the frame.";
 }
 

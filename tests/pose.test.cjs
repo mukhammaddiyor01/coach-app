@@ -143,6 +143,7 @@ test("frames preserve aspect ratio and only go to the local API", async () => {
   assert.equal(page.dots.length, 33);
   assert.deepEqual(page.dots[0], [320, 180]);
   assert.match(page.message.textContent, /Body detected/);
+  assert.match(page.message.textContent, /Counting controls are unavailable/);
   page.stop();
 });
 
