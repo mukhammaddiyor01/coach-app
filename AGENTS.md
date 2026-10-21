@@ -7,8 +7,8 @@ The user selects an exercise and turns on the camera. The app counts
 repetitions and provides feedback on the posture features it can observe.
 
 The user has authorized starting implementation. The current milestone is
-stage 4: connect the browser camera, show its preview, and stop its tracks
-when requested or when leaving the page. Exercise analysis comes later.
+stage 5: detect body landmarks with MediaPipe on the local Python backend
+and display them over the camera preview. Repetition counting comes later.
 Implement only this milestone; later stages require user authorization.
 The structure below is the target plan. Some files exist; create the remaining
 files only when their implementation stage is authorized.
@@ -209,8 +209,8 @@ Conversation with the user may remain in Uzbek unless they request otherwise.
 - Do not print secret values while checking them. Report filenames and counts
   only. If an actual credential is discovered in history, do not push it; arrange
   credential rotation and history cleanup without exposing its value.
-- At the current stage, camera video remains in the browser. Do not record,
-  persist, upload, or send it to a third-party service.
+- Local pose analysis is now authorized. Process sampled camera frames only
+  on this computer. Do not record, persist, or send them to a third-party service.
 - When local pose analysis is authorized, send only the frames needed for
   analysis to the local backend, process them in memory, and explain that data
   flow in the interface. Do not retain frames or landmarks by default.

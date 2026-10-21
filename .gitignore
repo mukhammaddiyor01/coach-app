@@ -34,3 +34,4 @@ logs/
 
 # Downloaded AI models
 models/*.task
+models/*.part

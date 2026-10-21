@@ -143,3 +143,16 @@ python -m unittest discover -s tests -p 'test_*.py'
 
 These tests use an in-process client and temporary dummy files. They do not
 access the camera or transmit project data to external services.
+
+## Local pose model
+
+Download the versioned model from Google's official MediaPipe model storage:
+
+```bash
+python download_model.py
+```
+
+The model is saved under `models/`, outside the public static directory, and
+is ignored by Git. This download contains model weights, not camera data.
+`backend/vision/pose_detector.py` converts bounded JPEG frames into landmarks.
+It uses independent-image mode so no user's video history is shared.
