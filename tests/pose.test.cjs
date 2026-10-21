@@ -4,6 +4,8 @@ const path = require("node:path");
 const test = require("node:test");
 const vm = require("node:vm");
 
+const pushupScript = fs.readFileSync(path.join(__dirname, "../frontend/static/js/pushup.js"), "utf8");
+
 const poseScript = fs.readFileSync(
   path.join(__dirname, "../frontend/static/js/pose.js"),
   "utf8",
@@ -64,6 +66,21 @@ function createPosePage(options = {}) {
     "#pose-overlay": overlay,
     "#pose-message": message,
   };
+  const reset = {
+    disabled: true,
+    addEventListener(event, callback) { this.click = callback; },
+  };
+  if (options.pushUp) {
+    Object.assign(elements, {
+      "#pushup-results": {},
+      "#rep-count": { textContent: "0" },
+      "#rep-phase": { textContent: "Get ready" },
+      "#elbow-angle": { textContent: "—" },
+      "#body-angle": { textContent: "—" },
+      "#workout-message": { textContent: "Start the camera." },
+      "#reset-count": reset,
+    });
+  }
   const context = vm.createContext({
     document: {
       querySelector: (selector) => elements[selector],
@@ -85,10 +102,13 @@ function createPosePage(options = {}) {
       timers.delete(id);
     },
   });
+  if (options.pushUp) {
+    vm.runInContext(pushupScript, context);
+  }
   vm.runInContext(poseScript, context);
 
   return {
-    calls, timers, dots, message, video, overlay, capture,
+    calls, timers, dots, message, video, overlay, capture, elements, reset,
     start: () => context.startPoseDetection(),
     stop: () => context.stopPoseDetection(),
   };
@@ -214,5 +234,176 @@ test("video metadata must be ready before a frame is sampled", async () => {
   await page.start();
   assert.equal(page.calls.length, 0);
   assert.equal(page.timers.size, 1);
+  page.stop();
+});
+
+
+function workout(repCount = 0) {
+  return {
+    rep_count: repCount, phase: "up", status: "tracking", message: "Server guidance.",
+    elbow_angle: 170, body_angle: 175,
+  };
+}
+
+function createPushUpPage(options = {}) {
+  let sessionNumber = 0;
+  const page = createPosePage({
+    pushUp: true,
+    fetch(url, request) {
+      if (options.fetch) {
+        const custom = options.fetch(url, request);
+        if (custom) return custom;
+      }
+      if (request.method === "DELETE") return Promise.resolve({ ok: true, status: 204 });
+      if (url === "/api/pushup/session") {
+        sessionNumber += 1;
+        return Promise.resolve({ ok: true, status: 201, json: async () => ({
+          session_id: String(sessionNumber).padStart(32, "0"), workout: workout(),
+        }) });
+      }
+      return Promise.resolve(makeResponse({ ...makePoseResult(), workout: workout(options.count || 0) }));
+    },
+  });
+  page.count = page.elements["#rep-count"];
+  page.workoutMessage = page.elements["#workout-message"];
+  return page;
+}
+
+test("Push Up creates no session until camera starts and displays Python's count", async () => {
+  const page = createPushUpPage({ count: 7 });
+  assert.equal(page.calls.length, 0);
+  assert.equal(page.reset.disabled, true);
+  await page.start();
+  assert.equal(page.calls[0].url, "/api/pushup/session");
+  assert.equal(page.calls[1].url, "/api/pushup/frame");
+  assert.equal(page.calls[1].request.headers["X-Coach-Session"], "1".padStart(32, "0"));
+  assert.equal(page.count.textContent, "7");
+  assert.equal(page.elements["#elbow-angle"].textContent, "170°");
+  assert.equal(page.workoutMessage.textContent, "Server guidance.");
+  assert.doesNotMatch(page.message.textContent, /counting comes later/);
+  assert.equal(page.reset.disabled, false);
+  page.stop();
+});
+
+test("Push Up stop closes server state without putting its token in a URL", async () => {
+  const page = createPushUpPage({ count: 3 });
+  await page.start();
+  page.stop();
+  const close = page.calls.at(-1);
+  assert.equal(close.url, "/api/pushup/session");
+  assert.equal(close.request.method, "DELETE");
+  assert.equal(close.request.keepalive, true);
+  assert.equal(close.request.headers["X-Coach-Session"], "1".padStart(32, "0"));
+  assert.equal(page.count.textContent, "3");
+  assert.equal(page.reset.disabled, true);
+  assert.equal(page.elements["#elbow-angle"].textContent, "—");
+  assert.match(page.workoutMessage.textContent, /Last received count/);
+});
+
+test("Push Up reset replaces the session and renders the new server count", async () => {
+  let count = 4;
+  const page = createPushUpPage({ fetch(url) {
+    if (url.endsWith("/frame")) return Promise.resolve(makeResponse({ ...makePoseResult(), workout: workout(count) }));
+  } });
+  await page.start();
+  assert.equal(page.count.textContent, "4");
+  count = 0;
+  await page.reset.click();
+  assert.equal(page.count.textContent, "0");
+  assert.equal(page.calls.filter((call) => call.request.method === "DELETE").length, 1);
+  assert.equal(page.calls.at(-1).request.headers["X-Coach-Session"], "2".padStart(32, "0"));
+  page.stop();
+});
+
+test("a frame that finishes after Reset cannot restore the old count", async () => {
+  const oldFrame = createDeferred();
+  let frames = 0;
+  const page = createPushUpPage({ fetch(url) {
+    if (url.endsWith("/frame") && ++frames === 1) return oldFrame.promise;
+  } });
+  const starting = page.start();
+  for (let step = 0; step < 8; step += 1) await Promise.resolve();
+  assert.equal(page.calls.at(-1).url, "/api/pushup/frame");
+  const oldRequest = page.calls.at(-1).request;
+  await page.reset.click();
+  assert.equal(oldRequest.signal.aborted, true);
+  oldFrame.resolve(makeResponse({ ...makePoseResult(), workout: workout(99) }));
+  await starting;
+  assert.equal(page.count.textContent, "0");
+  assert.equal([...page.timers.values()].filter((timer) => timer.delay === 200).length, 1);
+  page.stop();
+});
+
+test("a late session creation after Stop is closed without uploading a frame", async () => {
+  const creation = createDeferred();
+  const page = createPushUpPage({ fetch(url, request) {
+    if (url.endsWith("/session") && request.method === "POST") return creation.promise;
+  } });
+  const starting = page.start();
+  page.stop();
+  assert.equal(page.calls[0].request.signal.aborted, true);
+  creation.resolve({ ok: true, status: 201, json: async () => ({ session_id: "1".padStart(32, "0"), workout: workout(8) }) });
+  await starting;
+  assert.equal(page.calls.length, 2);
+  assert.equal(page.calls[1].request.method, "DELETE");
+  assert.equal(page.count.textContent, "0");
+  assert.equal(page.reset.disabled, true);
+});
+
+test("session creation failure leaves counting disabled and sends no frame", async () => {
+  const page = createPushUpPage({ fetch() {
+    return Promise.resolve(makeResponse({ detail: "Capacity reached." }, 429));
+  } });
+  await page.start();
+  assert.equal(page.calls.length, 1);
+  assert.equal(page.reset.disabled, true);
+  assert.match(page.message.textContent, /Could not start local counting/);
+  assert.equal(page.timers.size, 0);
+});
+
+test("fatal Push Up analysis errors close the session and disable Reset", async () => {
+  const page = createPushUpPage({ fetch(url) {
+    if (url.endsWith("/frame")) return Promise.resolve(makeResponse({ detail: "Model unavailable." }, 503));
+  } });
+  await page.start();
+  await Promise.resolve();
+  assert.match(page.message.textContent, /Model unavailable/);
+  assert.equal(page.reset.disabled, true);
+  assert.equal(page.calls.at(-1).request.method, "DELETE");
+  assert.equal([...page.timers.values()].some((timer) => timer.delay === 200), false);
+});
+
+test("temporary frame errors mark displayed metrics as paused", async () => {
+  const page = createPushUpPage({ fetch(url) {
+    if (url.endsWith("/frame")) return Promise.reject(new Error("offline"));
+  } });
+  await page.start();
+  assert.match(page.workoutMessage.textContent, /Tracking is paused/);
+  assert.equal(page.elements["#elbow-angle"].textContent, "—");
+  assert.equal(page.reset.disabled, false);
+  page.stop();
+});
+
+test("failed session cleanup explains the bounded expiration fallback", async () => {
+  const page = createPushUpPage({ fetch(url, request) {
+    if (request.method === "DELETE") return Promise.reject(new Error("offline"));
+  } });
+  await page.start();
+  page.stop();
+  for (let step = 0; step < 5; step += 1) await Promise.resolve();
+  assert.match(page.workoutMessage.textContent, /expire within 10 minutes/);
+});
+
+test("late cleanup failures do not overwrite a newly running session", async () => {
+  const cleanup = createDeferred();
+  const page = createPushUpPage({ fetch(url, request) {
+    if (request.method === "DELETE") return cleanup.promise;
+  } });
+  await page.start();
+  await page.reset.click();
+  cleanup.reject(new Error("offline"));
+  for (let step = 0; step < 5; step += 1) await Promise.resolve();
+  assert.equal(page.workoutMessage.textContent, "Server guidance.");
+  assert.equal(page.reset.disabled, false);
   page.stop();
 });

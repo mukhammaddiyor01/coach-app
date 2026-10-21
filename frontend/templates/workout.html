@@ -7,6 +7,9 @@
     <title>{{ exercise.title if exercise else 'Exercise not found' }} — Coach App</title>
     <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}" />
     {% if exercise %}
+    {% if exercise_id == 'pushup' %}
+    <script src="{{ url_for('static', path='js/pushup.js') }}" defer></script>
+    {% endif %}
     <script src="{{ url_for('static', path='js/pose.js') }}" defer></script>
     <script src="{{ url_for('static', path='js/camera.js') }}" defer></script>
     {% endif %}
@@ -71,6 +74,20 @@
               </div>
               <p id="camera-message" class="stage-note" role="status">Press Start camera to allow access. Sampled frames are processed by Python on this computer and are not saved.</p>
               <p id="pose-message" class="stage-note" role="status">Body detection is off.</p>
+              {% if exercise_id == 'pushup' %}
+              <section id="pushup-results" class="workout-results" aria-labelledby="results-title">
+                <h3 id="results-title">Your Push Ups</h3>
+                <p class="rep-total"><span id="rep-count" aria-live="polite" aria-atomic="true">0</span> <span>repetitions</span></p>
+                <dl class="workout-metrics">
+                  <div><dt>Position</dt><dd id="rep-phase">Get ready</dd></div>
+                  <div><dt>Elbow angle</dt><dd id="elbow-angle">—</dd></div>
+                  <div><dt>Body angle</dt><dd id="body-angle">—</dd></div>
+                </dl>
+                <p id="workout-message" class="stage-note" role="status">Start the camera, then hold the upper position. A full upper–lower–upper movement counts once.</p>
+                <button id="reset-count" class="stop-button" type="button" disabled>Reset count</button>
+                <p class="stage-note">Experimental side-view counting. It cannot check every technique error. Stop keeps the last received count on screen; Start or Reset begins at zero.</p>
+              </section>
+              {% endif %}
               <noscript><p>Enable JavaScript to use the camera. You can still read the exercise instructions.</p></noscript>
             </aside>
           </div>

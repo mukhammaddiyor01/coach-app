@@ -5,6 +5,7 @@ const poseMessage = document.querySelector("#pose-message");
 const poseContext = poseCanvas.getContext("2d");
 const frameCanvas = document.createElement("canvas");
 const frameContext = frameCanvas.getContext("2d");
+const pushUpControls = typeof createPushUpControls === "function" ? createPushUpControls() : null;
 
 const FRAME_INTERVAL_MS = 200;
 const REQUEST_TIMEOUT_MS = 20_000;
@@ -20,6 +21,7 @@ let poseRunning = false;
 let poseRunId = 0;
 let poseTimer = null;
 let poseRequest = null;
+let pushUpSession = null;
 
 function isCurrentPoseRun(runId) {
   return poseRunning && runId === poseRunId;
@@ -41,9 +43,28 @@ function stopPoseDetection() {
   frameCanvas.width = 0;
   frameCanvas.height = 0;
   poseMessage.textContent = "Body detection is off.";
+  if (pushUpControls) {
+    pushUpControls.setActive(false);
+    pushUpControls.showPaused("Camera stopped. Last received count is shown. Starting again begins at zero.");
+    closeCountingSession();
+  }
 }
 
-function startPoseDetection() {
+function closeCountingSession() {
+  if (!pushUpSession) {
+    return;
+  }
+  const token = pushUpSession;
+  const stoppedRunId = poseRunId;
+  pushUpSession = null;
+  pushUpControls.closeSession(token).then((closed) => {
+    if (!closed && !poseRunning && poseRunId === stoppedRunId) {
+      pushUpControls.showPaused("Camera stopped. Temporary counting state will expire within 10 minutes.");
+    }
+  });
+}
+
+async function startPoseDetection() {
   stopPoseDetection();
 
   if (!poseContext || !frameContext) {
@@ -54,6 +75,34 @@ function startPoseDetection() {
   poseRunning = true;
   const runId = ++poseRunId;
   poseMessage.textContent = "Starting local body detection…";
+  if (pushUpControls) {
+    const request = new AbortController();
+    poseRequest = request;
+    const timeout = setTimeout(() => request.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const session = await pushUpControls.createSession(request.signal);
+      if (!isCurrentPoseRun(runId)) {
+        // A late session response must never replace the next camera run.
+        await pushUpControls.closeSession(session.session_id);
+        return;
+      }
+      pushUpSession = session.session_id;
+      pushUpControls.showResult(session.workout);
+      pushUpControls.setActive(true);
+    } catch (error) {
+      if (isCurrentPoseRun(runId)) {
+        stopPoseDetection();
+        poseMessage.textContent = "Could not start local counting. Stop and restart the camera to try again.";
+        pushUpControls.showPaused("Counting is unavailable. Check the local Python server and restart the camera.");
+      }
+      return;
+    } finally {
+      clearTimeout(timeout);
+      if (poseRequest === request) {
+        poseRequest = null;
+      }
+    }
+  }
   return analyzeNextFrame(runId);
 }
 
@@ -105,7 +154,7 @@ function drawPoseLandmarks(result) {
   }
 
   poseMessage.textContent = visibleLandmarks.length
-    ? `Body detected · ${visibleLandmarks.length} visible landmarks. Repetition counting comes later.`
+    ? `Body detected · ${visibleLandmarks.length} visible landmarks.${pushUpControls ? "" : " Repetition counting comes later."}`
     : "No visible body landmarks. Move back so your whole body is in the frame.";
 }
 
@@ -135,12 +184,17 @@ async function analyzeNextFrame(runId) {
     request = new AbortController();
     poseRequest = request;
     timeout = setTimeout(() => request.abort(), REQUEST_TIMEOUT_MS);
-    const response = await fetch("/api/pose", {
+    const headers = { "Content-Type": "image/jpeg", "X-Coach-Camera": "1" };
+    if (pushUpSession) {
+      headers["X-Coach-Session"] = pushUpSession;
+    }
+    const endpoint = pushUpControls ? "/api/pushup/frame" : "/api/pose";
+    const response = await fetch(endpoint, {
       method: "POST",
       mode: "same-origin",
       credentials: "omit",
       cache: "no-store",
-      headers: { "Content-Type": "image/jpeg", "X-Coach-Camera": "1" },
+      headers,
       body: frame,
       signal: request.signal,
     });
@@ -155,14 +209,19 @@ async function analyzeNextFrame(runId) {
       poseMessage.textContent = result.detail || "Local body detection is unavailable.";
       if (response.status === 429) {
         nextDelay = 1000;
+        pushUpControls?.showPaused("Tracking is busy. Last received count is shown.");
       } else {
-        poseRunning = false;
-        poseMessage.textContent += " Stop and restart the camera after resolving this issue.";
+        const detail = poseMessage.textContent;
+        stopPoseDetection();
+        poseMessage.textContent = detail + " Stop and restart the camera after resolving this issue.";
       }
       return;
     }
 
     drawPoseLandmarks(result);
+    if (pushUpControls && result.workout) {
+      pushUpControls.showResult(result.workout);
+    }
   } catch (error) {
     if (!isCurrentPoseRun(runId)) {
       return;
@@ -170,6 +229,7 @@ async function analyzeNextFrame(runId) {
 
     clearPoseOverlay();
     poseMessage.textContent = "Waiting for local body detection. Check that the Python server is running.";
+    pushUpControls?.showPaused("Tracking is paused. Last received count is shown; waiting for the local server.");
     nextDelay = 1000;
   } finally {
     clearTimeout(timeout);
