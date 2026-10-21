@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="Camera placement and starting position instructions for your selected exercise." />
     <title>{{ exercise.title if exercise else 'Exercise not found' }} — Coach App</title>
     <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}" />
@@ -40,19 +40,6 @@
           </nav>
 
           <div class="workout-layout">
-            <section class="instruction-panel" aria-labelledby="instructions-title">
-              <p class="eyebrow">BEFORE YOU BEGIN</p>
-              <h2 id="instructions-title">Set yourself up</h2>
-              <ol id="instruction-list" class="instruction-list">
-                {% for step in exercise.steps %}
-                <li>
-                  <h3>{{ step.title }}</h3>
-                  <p>{{ step.description }}</p>
-                </li>
-                {% endfor %}
-              </ol>
-            </section>
-
             <aside class="camera-panel" aria-labelledby="camera-title">
               <div id="camera-placeholder" class="camera-placeholder" aria-hidden="true">
                 <svg viewBox="0 0 80 80" fill="none">
@@ -96,6 +83,19 @@
               </section>
               <noscript><p>Enable JavaScript to use the camera. You can still read the exercise instructions.</p></noscript>
             </aside>
+
+            <section class="instruction-panel" aria-labelledby="instructions-title">
+              <p class="eyebrow">BEFORE YOU BEGIN</p>
+              <h2 id="instructions-title">Set yourself up</h2>
+              <ol id="instruction-list" class="instruction-list">
+                {% for step in exercise.steps %}
+                <li>
+                  <h3>{{ step.title }}</h3>
+                  <p>{{ step.description }}</p>
+                </li>
+                {% endfor %}
+              </ol>
+            </section>
           </div>
         </div>
         {% endif %}

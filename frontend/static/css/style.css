@@ -16,13 +16,31 @@ body {
   background: var(--background);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
 }
 
 button, a { -webkit-tap-highlight-color: transparent; }
 button { font: inherit; }
 a { color: inherit; }
 
-.page { max-width: 1080px; margin: 0 auto; padding: 0 36px; }
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: env(safe-area-inset-top, 0px) max(36px, env(safe-area-inset-right, 0px))
+    env(safe-area-inset-bottom, 0px) max(36px, env(safe-area-inset-left, 0px));
+}
+
+main, .exercise-card, .camera-panel, .instruction-panel {
+  min-width: 0;
+}
+
+button, .exercise-tabs a, .brand, .back-link {
+  min-height: 44px;
+}
+
+button, .exercise-tabs a {
+  touch-action: manipulation;
+}
 .header { display: flex; align-items: center; justify-content: space-between; padding: 28px 0; border-bottom: 1px solid var(--border); }
 .brand { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 750; text-decoration: none; }
 .brand-symbol { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 11px; background: var(--text); color: white; font-size: 24px; }
@@ -56,7 +74,7 @@ footer { display: flex; justify-content: space-between; gap: 12px; margin-top: 4
 footer span:first-child { font-weight: 700; letter-spacing: 1px; }
 
 @media (max-width: 650px) {
-  .page { padding: 0 20px; }
+  .page { padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); }
   .header { padding: 20px 0; }
   .intro { padding: 36px 0 26px; }
   .exercise-grid { grid-template-columns: 1fr; gap: 14px; }
@@ -79,7 +97,7 @@ footer span:first-child { font-weight: 700; letter-spacing: 1px; }
 .exercise-tabs a { padding: 9px 20px; border: 1px solid var(--border); border-radius: 30px; font-size: 14px; text-decoration: none; }
 .exercise-tabs a:hover { background: #edf1e8; }
 .exercise-tabs a[aria-current="page"] { background: var(--text); border-color: var(--text); color: white; }
-.workout-layout { display: grid; grid-template-columns: 1.25fr 1fr; gap: 24px; align-items: start; }
+.workout-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; align-items: start; }
 .instruction-panel, .camera-panel { padding: 28px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); }
 .instruction-panel h2, .camera-panel h2 { margin: 0; font-size: 20px; letter-spacing: -0.5px; }
 .instruction-panel .eyebrow { margin-bottom: 10px; }
@@ -111,7 +129,9 @@ footer span:first-child { font-weight: 700; letter-spacing: 1px; }
 .camera-video {
   display: block;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: auto;
+  max-height: 65vh;
+  max-height: 65svh;
   object-fit: contain;
   margin-bottom: 0;
   border-radius: 12px;
@@ -133,6 +153,7 @@ footer span:first-child { font-weight: 700; letter-spacing: 1px; }
 .start-button,
 .stop-button {
   flex: 1 1 130px;
+  min-height: 48px;
   padding: 13px 18px;
   border: 1px solid var(--text);
   border-radius: 10px;
@@ -229,4 +250,160 @@ footer span:first-child { font-weight: 700; letter-spacing: 1px; }
 #reset-count:focus-visible {
   outline: 3px solid var(--text);
   outline-offset: 4px;
+}
+
+
+/* Keep the camera and results first in both visual and keyboard reading order. */
+.back-link,
+.exercise-tabs a {
+  display: inline-flex;
+  align-items: center;
+}
+
+.stage-note,
+.workout-metrics dd {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 750px) {
+  .workout-layout {
+    gap: 16px;
+  }
+
+  .back-link {
+    margin-top: 12px;
+  }
+
+  .workout-intro {
+    padding: 12px 0 20px;
+  }
+
+  .workout-intro .eyebrow {
+    margin-bottom: 10px;
+  }
+
+  .workout-intro .intro-description {
+    margin-top: 12px;
+  }
+
+  .exercise-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .exercise-tabs a {
+    justify-content: center;
+    padding: 10px 8px;
+    text-align: center;
+  }
+
+  .instruction-panel,
+  .camera-panel {
+    padding: 18px;
+  }
+
+  .camera-placeholder,
+  .camera-stage {
+    margin-bottom: 18px;
+  }
+
+  .camera-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 16px;
+  }
+
+  .camera-controls button {
+    padding-inline: 8px;
+  }
+
+  #reset-count {
+    width: 100%;
+  }
+
+  .workout-metrics {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 100px), 1fr));
+    gap: 12px;
+  }
+}
+
+@media (max-width: 650px) {
+  .header {
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-block: 14px;
+  }
+
+  .brand {
+    font-size: 18px;
+  }
+
+  .camera-status {
+    max-width: 50%;
+  }
+
+  .camera-status > span:first-child {
+    flex-shrink: 0;
+  }
+
+  .intro {
+    padding: 28px 0 22px;
+  }
+
+  h1 {
+    font-size: clamp(32px, 9vw, 44px);
+    letter-spacing: -1.2px;
+  }
+
+  .exercise-card {
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr);
+    gap: 2px 16px;
+    padding: 16px;
+  }
+
+  .exercise-drawing {
+    grid-column: 1;
+    grid-row: 1 / 5;
+    align-self: center;
+    width: 100%;
+    height: 90px;
+    margin: 0;
+  }
+
+  .card-top,
+  .exercise-name,
+  .exercise-subtitle,
+  .card-bottom {
+    grid-column: 2;
+  }
+
+  .exercise-name {
+    font-size: 24px;
+  }
+
+  .card-bottom {
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 8px;
+  }
+
+  .stage-note {
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  footer {
+    margin-top: 28px;
+    padding-bottom: 24px;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .camera-video {
+    max-height: 75vh;
+    max-height: 75svh;
+  }
 }

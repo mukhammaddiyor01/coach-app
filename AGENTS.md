@@ -7,9 +7,9 @@ The user selects an exercise and turns on the camera. The app counts
 repetitions and provides feedback on the posture features it can observe.
 
 The user has authorized starting implementation. The current milestone is
-stage 7: add and verify Squats counting first, then stationary Lunge counting,
-in separate plain Python services and connect both to the existing interface.
-Push Up counting is implemented. Detailed posture feedback is a later milestone.
+mobile web: adapt the existing selection and workout pages for phone screens,
+portrait and landscape camera previews, and touch-friendly camera controls.
+All three counters are implemented. Detailed posture feedback is a later milestone.
 Implement only this milestone; later stages require user authorization.
 The structure below is the target plan. Some files exist; create the remaining
 files only when their implementation stage is authorized.
