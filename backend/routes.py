@@ -8,8 +8,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from backend.exercises import EXERCISES
-from backend.schemas import PoseResult, PushUpResult, SessionResult
-from backend.services.pushup_service import InvalidLandmarksError
+from backend.schemas import PoseResult, WorkoutPoseResult, SessionResult
+from backend.services.observations import InvalidLandmarksError
 from backend.workout_sessions import (
     SessionLimitError, SessionNotFoundError, WorkoutSessions, get_workout_sessions,
 )
@@ -67,7 +67,6 @@ def validate_camera_request(request: Request):
     expected_origin = str(request.base_url).rstrip("/")
     if origin is not None and origin != expected_origin:
         raise HTTPException(status_code=403, detail="Cross-origin camera requests are blocked.")
-
 
 
 def validate_frame_request(request: Request):
@@ -129,22 +128,28 @@ async def run_frame_analysis(operation, *arguments):
         ) from None
     except PoseDetectionError:
         raise HTTPException(status_code=503, detail="Body detection is temporarily unavailable.") from None
-
     except InvalidLandmarksError:
         raise HTTPException(status_code=503, detail="Body tracking could not be evaluated. Try again.") from None
 
 
-@router.post("/api/pushup/session", response_model=SessionResult, status_code=201)
-def create_pushup_session(
+@router.post("/api/{exercise_id}/session", response_model=SessionResult, status_code=201)
+def create_workout_session(
     request: Request,
+    exercise_id: str,
     sessions: WorkoutSessions = Depends(get_workout_sessions),
 ):
     validate_camera_request(request)
+    validate_exercise_id(exercise_id)
     try:
-        token, workout = sessions.create()
+        token, workout = sessions.create(exercise_id)
     except SessionLimitError as error:
         raise HTTPException(status_code=429, detail=str(error)) from None
-    return {"session_id": token, "workout": workout}
+    return {"session_id": token, "exercise_id": exercise_id, "workout": workout}
+
+
+def validate_exercise_id(exercise_id):
+    if exercise_id not in EXERCISES:
+        raise HTTPException(status_code=404, detail="Choose Push Up, Squats, or Lunge.")
 
 
 def read_session_token(request: Request):
@@ -154,25 +159,32 @@ def read_session_token(request: Request):
     return token
 
 
-@router.delete("/api/pushup/session", status_code=204)
-def close_pushup_session(
+@router.delete("/api/{exercise_id}/session", status_code=204)
+def close_workout_session(
     request: Request,
+    exercise_id: str,
     sessions: WorkoutSessions = Depends(get_workout_sessions),
 ):
     validate_camera_request(request)
-    sessions.close(read_session_token(request))
+    validate_exercise_id(exercise_id)
+    try:
+        sessions.close(read_session_token(request), exercise_id)
+    except SessionNotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from None
 
 
-@router.post("/api/pushup/frame", response_model=PushUpResult)
-async def analyze_pushup_frame(
+@router.post("/api/{exercise_id}/frame", response_model=WorkoutPoseResult)
+async def analyze_workout_frame(
     request: Request,
+    exercise_id: str,
     detector: PoseDetector = Depends(get_pose_detector),
     sessions: WorkoutSessions = Depends(get_workout_sessions),
 ):
     validate_frame_request(request)
+    validate_exercise_id(exercise_id)
     token = read_session_token(request)
     try:
-        session = sessions.get(token)
+        session = sessions.get(token, exercise_id)
     except SessionNotFoundError as error:
         raise HTTPException(status_code=404, detail=str(error)) from None
     frame = await read_frame(request)

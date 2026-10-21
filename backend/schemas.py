@@ -23,14 +23,18 @@ class WorkoutResult(BaseModel):
     phase: Literal["ready", "up", "down"]
     status: Literal["waiting", "tracking"]
     message: str
-    elbow_angle: FiniteFloat | None
-    body_angle: FiniteFloat | None
+    elbow_angle: FiniteFloat | None = None
+    body_angle: FiniteFloat | None = None
+    knee_angle: FiniteFloat | None = None
+    left_knee_angle: FiniteFloat | None = None
+    right_knee_angle: FiniteFloat | None = None
 
 
 class SessionResult(BaseModel):
     session_id: str
+    exercise_id: Literal["pushup", "squats", "lunge"]
     workout: WorkoutResult
 
 
-class PushUpResult(PoseResult):
+class WorkoutPoseResult(PoseResult):
     workout: WorkoutResult

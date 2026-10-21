@@ -76,7 +76,7 @@ class WorkoutSessionTests(unittest.TestCase):
         session = sessions.get(token)
         result = session.analyze(Detector(), b"temporary-frame")
         self.assertEqual(result["workout"]["status"], "waiting")
-        self.assertEqual(set(vars(session)), {"service", "last_used_at", "lock"})
+        self.assertEqual(set(vars(session)), {"service", "exercise_id", "last_used_at", "lock"})
 
 
 if __name__ == "__main__":
