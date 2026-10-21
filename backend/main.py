@@ -1,15 +1,27 @@
 """Create the application and connect its routes and static files."""
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.concurrency import run_in_threadpool
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from backend.routes import router
 from backend.security import PublicStaticFiles, add_security_headers
+from backend.vision.pose_detector import pose_detector
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        yield
+    finally:
+        await run_in_threadpool(pose_detector.close)
+
+
 app = FastAPI(
+    lifespan=lifespan,
     title="Coach App",
     debug=False,
     docs_url=None,

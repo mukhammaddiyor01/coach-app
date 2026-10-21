@@ -1,11 +1,23 @@
 """Page controllers: validate the exercise and render its HTML template."""
 from pathlib import Path
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
+from starlette.requests import ClientDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from backend.exercises import EXERCISES
+from backend.schemas import PoseResult
+from backend.vision.pose_detector import (
+    MAX_FRAME_BYTES,
+    InvalidFrameError,
+    ModelUnavailableError,
+    PoseBusyError,
+    PoseDetectionError,
+    PoseDetector,
+    get_pose_detector,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -40,3 +52,67 @@ def workout(request: Request, exercise_id: str):
             "exercises": EXERCISES,
         },
     )
+
+
+def validate_frame_request(request: Request):
+    # A custom header prevents another website from submitting a simple form.
+    if request.headers.get("x-coach-camera") != "1":
+        raise HTTPException(status_code=403, detail="Use this app's camera controls.")
+
+    origin = request.headers.get("origin")
+    expected_origin = str(request.base_url).rstrip("/")
+    if origin is not None and origin != expected_origin:
+        raise HTTPException(status_code=403, detail="Cross-origin frame requests are blocked.")
+
+    content_type = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+    if content_type != "image/jpeg":
+        raise HTTPException(status_code=415, detail="Send an image/jpeg frame.")
+
+
+async def read_frame(request: Request) -> bytes:
+    declared_size = request.headers.get("content-length")
+    if declared_size is not None:
+        try:
+            size = int(declared_size)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid frame size.") from None
+
+        if size < 0:
+            raise HTTPException(status_code=400, detail="Invalid frame size.")
+        if size > MAX_FRAME_BYTES:
+            raise HTTPException(status_code=413, detail="Frame must be smaller than 1 MB.")
+
+    frame = bytearray()
+    try:
+        async for chunk in request.stream():
+            if len(frame) + len(chunk) > MAX_FRAME_BYTES:
+                raise HTTPException(status_code=413, detail="Frame must be smaller than 1 MB.")
+            frame.extend(chunk)
+    except ClientDisconnect:
+        raise HTTPException(status_code=400, detail="Frame request was interrupted.") from None
+
+    return bytes(frame)
+
+
+@router.post("/api/pose", response_model=PoseResult, name="detect_pose")
+async def detect_pose(
+    request: Request,
+    detector: PoseDetector = Depends(get_pose_detector),
+):
+    validate_frame_request(request)
+    frame_bytes = await read_frame(request)
+
+    try:
+        return await run_in_threadpool(detector.detect, frame_bytes)
+    except InvalidFrameError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from None
+    except ModelUnavailableError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from None
+    except PoseBusyError:
+        raise HTTPException(
+            status_code=429,
+            detail="Body detection is busy. Try the next frame.",
+            headers={"Retry-After": "1"},
+        ) from None
+    except PoseDetectionError:
+        raise HTTPException(status_code=503, detail="Body detection is temporarily unavailable.") from None

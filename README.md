@@ -156,3 +156,12 @@ The model is saved under `models/`, outside the public static directory, and
 is ignored by Git. This download contains model weights, not camera data.
 `backend/vision/pose_detector.py` converts bounded JPEG frames into landmarks.
 It uses independent-image mode so no user's video history is shared.
+
+### Local frame endpoint
+
+`POST /api/pose` accepts a JPEG frame up to 1 MB and 1280 pixels per side.
+It requires the app's `X-Coach-Camera` header and rejects foreign origins.
+The response contains only frame dimensions and landmarks, with an empty
+landmark list when no body is found. Frames are processed in memory; no upload
+files, recordings, or landmark history are saved. Overlapping inference receives
+a busy response instead of building a queue of camera frames.
