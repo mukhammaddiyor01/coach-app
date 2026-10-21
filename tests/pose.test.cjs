@@ -4,7 +4,7 @@ const path = require("node:path");
 const test = require("node:test");
 const vm = require("node:vm");
 
-const pushupScript = fs.readFileSync(path.join(__dirname, "../frontend/static/js/pushup.js"), "utf8");
+const workoutScript = fs.readFileSync(path.join(__dirname, "../frontend/static/js/workout.js"), "utf8");
 
 const poseScript = fs.readFileSync(
   path.join(__dirname, "../frontend/static/js/pose.js"),
@@ -70,9 +70,9 @@ function createPosePage(options = {}) {
     disabled: true,
     addEventListener(event, callback) { this.click = callback; },
   };
-  if (options.pushUp) {
+  if (options.exercise) {
     Object.assign(elements, {
-      "#pushup-results": {},
+      "#workout-results": { dataset: { exercise: options.exercise } },
       "#rep-count": { textContent: "0" },
       "#rep-phase": { textContent: "Get ready" },
       "#elbow-angle": { textContent: "—" },
@@ -80,6 +80,16 @@ function createPosePage(options = {}) {
       "#workout-message": { textContent: "Start the camera." },
       "#reset-count": reset,
     });
+  }
+  if (options.exercise === "squats") {
+    delete elements["#elbow-angle"];
+    delete elements["#body-angle"];
+    elements["#knee-angle"] = { textContent: "—" };
+  } else if (options.exercise === "lunge") {
+    delete elements["#elbow-angle"];
+    delete elements["#body-angle"];
+    elements["#left-knee-angle"] = { textContent: "—" };
+    elements["#right-knee-angle"] = { textContent: "—" };
   }
   const context = vm.createContext({
     document: {
@@ -102,8 +112,8 @@ function createPosePage(options = {}) {
       timers.delete(id);
     },
   });
-  if (options.pushUp) {
-    vm.runInContext(pushupScript, context);
+  if (options.exercise) {
+    vm.runInContext(workoutScript, context);
   }
   vm.runInContext(poseScript, context);
 
@@ -245,20 +255,20 @@ function workout(repCount = 0) {
   };
 }
 
-function createPushUpPage(options = {}) {
+function createWorkoutPage(options = {}) {
   let sessionNumber = 0;
   const page = createPosePage({
-    pushUp: true,
+    exercise: options.exercise || "pushup",
     fetch(url, request) {
       if (options.fetch) {
         const custom = options.fetch(url, request);
         if (custom) return custom;
       }
       if (request.method === "DELETE") return Promise.resolve({ ok: true, status: 204 });
-      if (url === "/api/pushup/session") {
+      if (url.endsWith("/session")) {
         sessionNumber += 1;
         return Promise.resolve({ ok: true, status: 201, json: async () => ({
-          session_id: String(sessionNumber).padStart(32, "0"), workout: workout(),
+          session_id: String(sessionNumber).padStart(32, "0"), exercise_id: options.exercise || "pushup", workout: workout(),
         }) });
       }
       return Promise.resolve(makeResponse({ ...makePoseResult(), workout: workout(options.count || 0) }));
@@ -270,7 +280,7 @@ function createPushUpPage(options = {}) {
 }
 
 test("Push Up creates no session until camera starts and displays Python's count", async () => {
-  const page = createPushUpPage({ count: 7 });
+  const page = createWorkoutPage({ count: 7 });
   assert.equal(page.calls.length, 0);
   assert.equal(page.reset.disabled, true);
   await page.start();
@@ -286,7 +296,7 @@ test("Push Up creates no session until camera starts and displays Python's count
 });
 
 test("Push Up stop closes server state without putting its token in a URL", async () => {
-  const page = createPushUpPage({ count: 3 });
+  const page = createWorkoutPage({ count: 3 });
   await page.start();
   page.stop();
   const close = page.calls.at(-1);
@@ -302,7 +312,7 @@ test("Push Up stop closes server state without putting its token in a URL", asyn
 
 test("Push Up reset replaces the session and renders the new server count", async () => {
   let count = 4;
-  const page = createPushUpPage({ fetch(url) {
+  const page = createWorkoutPage({ fetch(url) {
     if (url.endsWith("/frame")) return Promise.resolve(makeResponse({ ...makePoseResult(), workout: workout(count) }));
   } });
   await page.start();
@@ -318,7 +328,7 @@ test("Push Up reset replaces the session and renders the new server count", asyn
 test("a frame that finishes after Reset cannot restore the old count", async () => {
   const oldFrame = createDeferred();
   let frames = 0;
-  const page = createPushUpPage({ fetch(url) {
+  const page = createWorkoutPage({ fetch(url) {
     if (url.endsWith("/frame") && ++frames === 1) return oldFrame.promise;
   } });
   const starting = page.start();
@@ -336,7 +346,7 @@ test("a frame that finishes after Reset cannot restore the old count", async () 
 
 test("a late session creation after Stop is closed without uploading a frame", async () => {
   const creation = createDeferred();
-  const page = createPushUpPage({ fetch(url, request) {
+  const page = createWorkoutPage({ fetch(url, request) {
     if (url.endsWith("/session") && request.method === "POST") return creation.promise;
   } });
   const starting = page.start();
@@ -351,7 +361,7 @@ test("a late session creation after Stop is closed without uploading a frame", a
 });
 
 test("session creation failure leaves counting disabled and sends no frame", async () => {
-  const page = createPushUpPage({ fetch() {
+  const page = createWorkoutPage({ fetch() {
     return Promise.resolve(makeResponse({ detail: "Capacity reached." }, 429));
   } });
   await page.start();
@@ -362,7 +372,7 @@ test("session creation failure leaves counting disabled and sends no frame", asy
 });
 
 test("fatal Push Up analysis errors close the session and disable Reset", async () => {
-  const page = createPushUpPage({ fetch(url) {
+  const page = createWorkoutPage({ fetch(url) {
     if (url.endsWith("/frame")) return Promise.resolve(makeResponse({ detail: "Model unavailable." }, 503));
   } });
   await page.start();
@@ -374,7 +384,7 @@ test("fatal Push Up analysis errors close the session and disable Reset", async 
 });
 
 test("temporary frame errors mark displayed metrics as paused", async () => {
-  const page = createPushUpPage({ fetch(url) {
+  const page = createWorkoutPage({ fetch(url) {
     if (url.endsWith("/frame")) return Promise.reject(new Error("offline"));
   } });
   await page.start();
@@ -385,7 +395,7 @@ test("temporary frame errors mark displayed metrics as paused", async () => {
 });
 
 test("failed session cleanup explains the bounded expiration fallback", async () => {
-  const page = createPushUpPage({ fetch(url, request) {
+  const page = createWorkoutPage({ fetch(url, request) {
     if (request.method === "DELETE") return Promise.reject(new Error("offline"));
   } });
   await page.start();
@@ -396,7 +406,7 @@ test("failed session cleanup explains the bounded expiration fallback", async ()
 
 test("late cleanup failures do not overwrite a newly running session", async () => {
   const cleanup = createDeferred();
-  const page = createPushUpPage({ fetch(url, request) {
+  const page = createWorkoutPage({ fetch(url, request) {
     if (request.method === "DELETE") return cleanup.promise;
   } });
   await page.start();
@@ -407,3 +417,53 @@ test("late cleanup failures do not overwrite a newly running session", async () 
   assert.equal(page.reset.disabled, false);
   page.stop();
 });
+
+
+for (const exercise of ["squats", "lunge"]) {
+  test(`${exercise} sends frames to its own service and displays only its metrics`, async () => {
+    const result = {
+      ...workout(5), elbow_angle: null, body_angle: null,
+      knee_angle: 92, left_knee_angle: 94, right_knee_angle: 96,
+    };
+    const page = createWorkoutPage({ exercise, fetch(url) {
+      if (url.endsWith("/frame")) return Promise.resolve(makeResponse({ ...makePoseResult(), workout: result }));
+    } });
+    assert.equal(page.calls.length, 0);
+    await page.start();
+    assert.equal(page.calls[0].url, `/api/${exercise}/session`);
+    assert.equal(page.calls[1].url, `/api/${exercise}/frame`);
+    assert.equal(page.count.textContent, "5");
+    assert.equal(page.elements["#elbow-angle"], undefined);
+    if (exercise === "squats") {
+      assert.equal(page.elements["#knee-angle"].textContent, "92°");
+    } else {
+      assert.equal(page.elements["#left-knee-angle"].textContent, "94°");
+      assert.equal(page.elements["#right-knee-angle"].textContent, "96°");
+    }
+    await page.reset.click();
+    assert.equal(page.calls.at(-1).url, `/api/${exercise}/frame`);
+    assert.equal(page.calls.at(-1).request.headers["X-Coach-Session"], "2".padStart(32, "0"));
+    page.stop();
+    assert.equal(page.calls.at(-1).url, `/api/${exercise}/session`);
+    assert.equal(page.calls.at(-1).request.method, "DELETE");
+    assert.equal(page.reset.disabled, true);
+    const angleId = exercise === "squats" ? "#knee-angle" : "#left-knee-angle";
+    assert.equal(page.elements[angleId].textContent, "—");
+  });
+
+  test(`${exercise} ignores an old frame that arrives after Reset`, async () => {
+    const oldFrame = createDeferred();
+    let frames = 0;
+    const page = createWorkoutPage({ exercise, fetch(url) {
+      if (url.endsWith("/frame") && ++frames === 1) return oldFrame.promise;
+    } });
+    const starting = page.start();
+    for (let step = 0; step < 8; step += 1) await Promise.resolve();
+    await page.reset.click();
+    oldFrame.resolve(makeResponse({ ...makePoseResult(), workout: workout(99) }));
+    await starting;
+    assert.equal(page.count.textContent, "0");
+    assert.equal(page.calls.filter((call) => call.url === `/api/${exercise}/session` && call.request.method === "POST").length, 2);
+    page.stop();
+  });
+}

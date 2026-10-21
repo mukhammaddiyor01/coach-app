@@ -116,19 +116,22 @@ class PushUpApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 503)
         self.assertNotIn("nan", response.text)
 
-    def test_only_pushup_page_loads_counting_controls(self):
-        response = self.client.get("/workout/pushup")
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('id="rep-count"', response.text)
-        self.assertIn('id="reset-count"', response.text)
-        self.assertLess(response.text.index("js/pushup.js"), response.text.index("js/pose.js"))
-        self.assertLess(response.text.index("js/pose.js"), response.text.index("js/camera.js"))
-        script = self.client.get("/static/js/pushup.js")
-        self.assertEqual(script.status_code, 200)
-        for exercise in ("squats", "lunge"):
-            page = self.client.get("/workout/" + exercise)
-            self.assertNotIn('id="pushup-results"', page.text)
-            self.assertNotIn("js/pushup.js", page.text)
+    def test_each_page_loads_matching_counting_controls(self):
+        for exercise, angle in (("pushup", "elbow-angle"), ("squats", "knee-angle"), ("lunge", "left-knee-angle")):
+            with self.subTest(exercise=exercise):
+                response = self.client.get("/workout/" + exercise)
+                self.assertEqual(response.status_code, 200)
+                self.assertIn('data-exercise="' + exercise + '"', response.text)
+                self.assertIn('id="rep-count"', response.text)
+                self.assertIn('id="reset-count"', response.text)
+                self.assertIn('id="' + angle + '"', response.text)
+                self.assertLess(response.text.index("js/workout.js"), response.text.index("js/pose.js"))
+                self.assertLess(response.text.index("js/pose.js"), response.text.index("js/camera.js"))
+                if exercise != "pushup":
+                    self.assertNotIn('id="elbow-angle"', response.text)
+                if exercise == "lunge":
+                    self.assertIn('id="right-knee-angle"', response.text)
+        self.assertEqual(self.client.get("/static/js/workout.js").status_code, 200)
 
     def test_application_shutdown_clears_temporary_sessions(self):
         from backend.workout_sessions import workout_sessions
