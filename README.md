@@ -4,10 +4,10 @@ A local exercise coach for Push Up, Squats, and Lunge.
 
 ## Current progress
 
-Stage six is implemented: Push Up counts are calculated in a plain Python
-service and displayed beside the camera preview. Squats and Lunge currently
-show body landmarks and instructions; their counters are the next milestone.
-The app cannot check every exercise technique error.
+Stage seven is implemented: Push Up, Squats, and stationary Lunge each have
+a separate plain Python counting service. All three pages display the count,
+position, relevant angles, guidance, and a Reset count button. Detailed posture
+feedback is a later milestone. The app cannot check every technique error.
 
 Choose an exercise, read its setup instructions, and press Start camera.
 Sampled JPEG frames are sent only to the Python server on this computer.
@@ -19,7 +19,20 @@ and ankle visible. Hold the upper position, lower your body, then return to
 the upper position. This complete sequence counts once. Holding a position,
 starting at the bottom, or making an incomplete movement does not count.
 If tracking is lost, the incomplete repetition is discarded and completed
-repetitions remain. Displayed angles describe the currently tracked side.
+repetitions remain. Displayed Push Up and Squats angles describe the currently
+tracked side.
+
+For Squats, stand side-on with your shoulder, hip, knee, and ankle visible.
+Start standing, bend your knees and hips, then return to standing. The service
+tracks one visible leg and keeps that side for the current tracking sequence.
+
+For Lunge, begin upright with one foot forward and the other behind. Keep both
+hips, knees, and ankles visible. Bend both knees in place, then straighten both
+legs to complete one repetition. A movement of only one knee does not count.
+The screen shows left and right knee angles. Obvious changes in leg order or
+relative stance width discard the incomplete repetition, so start from the
+upper position again after changing the lead leg. This is a stationary-lunge
+counter; it does not reliably classify walking lunges or every foot movement.
 
 Reset count starts a new counting session while the camera stays on.
 Stop camera keeps the last received count on screen. Starting again begins at
@@ -74,27 +87,40 @@ can take a few seconds while the model loads.
 - `frontend/static/js/pose.js` — sample frames, call the local API, draw landmarks.
 - `backend/services/calculations.py` — shared pixel-based angle calculations.
 - `backend/services/pushup_service.py` — Push Up validation and counting rules.
+- `backend/services/squats_service.py` — Squats rules for the visible leg.
+- `backend/services/lunge_service.py` — stationary Lunge rules for both legs.
+- `backend/services/observations.py` — shared landmark validation and pixel conversion.
+- `backend/services/repetition_counter.py` — upper/lower sequence tracking for leg exercises.
 - `backend/workout_sessions.py` — isolated, temporary counting state and cleanup.
-- `frontend/static/js/pushup.js` — display Python results and manage session requests.
+- `frontend/static/js/workout.js` — display Python results and manage exercise sessions.
 
 Current flow:
-Camera → local controller → vision adapter → landmarks → Push Up service
+Camera → local controller → vision adapter → landmarks → selected exercise service
 → workout result → browser display and overlay.
-Squats and Lunge currently use the landmark-only path.
 The frontend does not calculate exercise angles or count repetitions.
 
-The Push Up service uses named experimental settings: an upper elbow angle
-of at least 155°, a lower angle of at most 100°, and a minimum body and knee
-angle of 160°. Positions must persist for at least 0.15 seconds. Gaps longer
-than one second discard an incomplete repetition. Horizontal body position,
-visible joints, and wrist support are required before counting. These simple
-2D checks are prototype settings, not universal exercise standards or a
-complete technique assessment. Adjust them in Python after camera testing.
+The services use named experimental settings:
+
+| Exercise | Upper position | Lower position |
+| --- | --- | --- |
+| Push Up | Elbow angle at least 155° | Elbow angle at most 100° |
+| Squats | Knee angle at least 160° | Knee angle at most 105° |
+| Lunge | Both knee angles at least 150° | Both knee angles at most 110° |
+
+Positions must persist for at least 0.15 seconds. Gaps longer than one second
+discard an incomplete repetition. Push Up additionally requires a horizontal,
+straight body, knee angle of at least 160°, and visible wrist support. Squats
+requires a visibly upright torso and a supported leg. Lunge requires an upright
+torso, visible legs, and separated feet. These simple 2D checks are prototype
+settings, not universal exercise standards or a complete technique assessment.
+Adjust named settings in Python after camera testing. Angles are calculated in
+pixel coordinates so the frame's width and height are both accounted for.
 
 ## Frame limits and session handling
 
-`POST /api/pose` and `POST /api/pushup/frame` accept only JPEG frames, up to
-1 MB and 1280 pixels per side.
+`POST /api/pose` and `POST /api/{exercise_id}/frame` accept only JPEG frames,
+up to 1 MB and 1280 pixels per side. The supported exercise identifiers are
+`pushup`, `squats`, and `lunge`.
 The frontend samples at most 640 pixels per side and waits for each response
 before sending another frame. Inference uses independent-image mode, so one
 user's video history is not reused for another. An overlapping frame receives
@@ -103,11 +129,13 @@ a busy response rather than creating an inference queue.
 Only frames from this app's camera controls are accepted. Foreign origins and
 requests without the custom camera header are rejected. A successful response
 contains dimensions and up to 33 landmarks; no body is a normal empty result.
-The Push Up frame endpoint also returns the count, phase, angles, and guidance.
+Exercise frame endpoints also return the count, phase, relevant angles, and guidance.
 
-`POST /api/pushup/session` creates temporary counting state. Send its identifier
-in the `X-Coach-Session` header on frame requests and on
-`DELETE /api/pushup/session` to close it. Identifiers stay in browser memory and
+`POST /api/{exercise_id}/session` creates temporary counting state and returns
+the session identifier, exercise identifier, and initial workout result. Send
+the session identifier in the `X-Coach-Session` header on frame requests and on
+`DELETE /api/{exercise_id}/session` to close it. A session is bound to its
+exercise; another exercise's endpoint cannot use or close it. Identifiers stay in browser memory and
 request headers; they are not placed in URLs, cookies, or local storage.
 Each camera run has its own counter. Reset closes the old session and creates
 a new one; there is no shared global repetition count.
@@ -116,7 +144,8 @@ State is bounded to 32 sessions. Idle sessions expire after 10 minutes and
 are removed on the next session lookup or creation, or at server shutdown.
 The browser requests cleanup on Stop, navigation, and hiding the tab. If the
 server is unreachable or a session-creation reply is lost, expiration provides
-a fallback. Only counting state is retained; frames and landmarks are not.
+a fallback. Only counting state and primitive tracking settings are retained;
+frames and landmark coordinates are not.
 Use one server process: sessions live in memory, so restarting or reloading the
 server clears them. Restart the camera if its session ends.
 
@@ -146,14 +175,17 @@ an explicit access-control and data-handling review.
 
 1. Open a workout page and allow camera access after pressing Start camera.
 2. Keep your whole body visible. Look for body landmarks over the video.
-3. On Push Up, hold the upper position, lower with control, and return up.
-   The count should increase once. Holding the upper position should not add reps.
+3. On each exercise page, hold the upper position, lower with control, and
+   return up. The count should increase once. Holding either position should
+   not add repetitions. On Squats, a half movement should not count. On Lunge,
+   keep both legs visible and feet in place; both knees must bend and straighten.
 4. Move out of view during an incomplete repetition. Old landmarks should
    disappear, the incomplete movement should be discarded, and the count kept.
 5. Press Reset count. It should return to zero with the camera still running.
 6. Press Stop camera. The preview should stop and the last count remain visible.
 7. Start again: the count begins at zero. Switch exercises, return home, or hide
-   the tab to confirm the camera stops. Squats and Lunge show no counter yet.
+   the tab to confirm the camera stops. The selected exercise should show its
+   own count and angles. Separate browser windows must have independent counts.
 8. If model setup fails, run `python download_model.py` and restart the camera.
 
 Automatic checks use simulated cameras and public test images, not your webcam.
@@ -178,10 +210,11 @@ Node.js is only used for tests. The app backend remains Python.
 The local adapter and real API have also been checked with Google's public
 MediaPipe pose sample (33 landmarks) and a blank image (no body).
 
-Push Up tests cover complete and incomplete repetitions, short position jitter,
+All three exercise services have tests for complete and incomplete repetitions,
+short position jitter,
 missing or low-confidence joints, posture readiness, frame aspect ratios,
 tracking gaps, reset, session isolation, bounded state, HTTP protections, and
 late browser responses. Synthetic landmark sequences check the counting path
-through the API; a generated blank JPEG checks the actual MediaPipe path and
-its zero-count waiting result. Real exercise counting still needs the manual
+through the API for every exercise; a generated blank JPEG checks the actual
+MediaPipe path and its zero-count waiting result for all three endpoints. Real exercise counting still needs the manual
 camera check above.
