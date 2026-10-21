@@ -2,6 +2,7 @@
 import math
 
 from backend.services.calculations import InvalidGeometryError, calculate_angle
+from backend.services.observations import InvalidLandmarksError, validate_observation
 
 # Prototype settings; these are not universal exercise standards.
 UP_ELBOW_ANGLE = 155
@@ -16,10 +17,6 @@ BODY_SIDES = {
     "left": (11, 13, 15, 23, 25, 27),
     "right": (12, 14, 16, 24, 26, 28),
 }
-
-
-class InvalidLandmarksError(ValueError):
-    """An observation contains malformed landmark data."""
 
 
 class PushUpService:
@@ -105,24 +102,7 @@ class PushUpService:
         return self._result("tracking", messages[self.current_phase], elbow_angle, body_angle)
 
     def _validate_observation(self, landmarks, width, height, observed_at):
-        for dimension in (width, height):
-            if type(dimension) is not int or dimension <= 0:
-                raise InvalidLandmarksError("Frame dimensions must be positive integers.")
-        if type(observed_at) not in (int, float) or not math.isfinite(observed_at) or observed_at < 0:
-            raise InvalidLandmarksError("Observation time must be a finite, nonnegative number.")
-        if self.last_observed_at is not None and observed_at < self.last_observed_at:
-            raise InvalidLandmarksError("Observation time must not move backwards.")
-        if not isinstance(landmarks, list) or len(landmarks) not in (0, 33):
-            raise InvalidLandmarksError("Expected either no body or 33 body landmarks.")
-        for landmark in landmarks:
-            if not isinstance(landmark, dict):
-                raise InvalidLandmarksError("Each landmark must contain named coordinates.")
-            for name in ("x", "y", "visibility", "presence"):
-                value = landmark.get(name)
-                if type(value) not in (int, float) or not math.isfinite(value):
-                    raise InvalidLandmarksError("Landmark coordinates and confidence must be finite numbers.")
-            if not 0 <= landmark["visibility"] <= 1 or not 0 <= landmark["presence"] <= 1:
-                raise InvalidLandmarksError("Landmark confidence must be between zero and one.")
+        validate_observation(landmarks, width, height, observed_at, self.last_observed_at)
 
     def _choose_visible_side(self, landmarks):
         if not landmarks:
