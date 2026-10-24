@@ -28,13 +28,7 @@
         <nav class="exercise-grid" aria-label="Exercises">
           <a class="exercise-card" href="{{ url_for('workout', exercise_id='pushup') }}">
             <span class="card-top"><span class="exercise-number">01</span></span>
-            <svg class="exercise-drawing" viewBox="0 0 260 140" fill="none" aria-hidden="true">
-              <path class="ground" d="M25 118H235" />
-              <circle cx="192" cy="49" r="12" />
-              <path d="M173 60L112 76L49 105M171 62L181 87L184 115M49 105L40 115H61" />
-              <path class="secondary-limb" d="M166 65L156 89L160 115" />
-              <circle class="joint" cx="112" cy="76" r="4" />
-            </svg>
+            <img class="exercise-photo" src="{{ url_for('static', path='images/exercises/pushup.png') }}" alt="" width="1959" height="803" decoding="async" />
             <span class="exercise-name">Push Up</span>
             <span class="exercise-subtitle">Bodyweight press</span>
             <span class="card-bottom">Upper body &amp; core<span class="card-arrow" aria-hidden="true">↗</span></span>
@@ -42,13 +36,7 @@
 
           <a class="exercise-card" href="{{ url_for('workout', exercise_id='squats') }}">
             <span class="card-top"><span class="exercise-number">02</span></span>
-            <svg class="exercise-drawing" viewBox="0 0 260 140" fill="none" aria-hidden="true">
-              <path class="ground" d="M25 118H235" />
-              <circle cx="137" cy="26" r="12" />
-              <path d="M132 44L112 77L151 88L140 115H161M130 48L166 59L193 53" />
-              <path class="secondary-limb" d="M113 78L98 96L109 115H130M128 51L151 67L179 66" />
-              <circle class="joint" cx="112" cy="77" r="4" />
-            </svg>
+            <img class="exercise-photo" src="{{ url_for('static', path='images/exercises/squats.png') }}" alt="" width="1536" height="1024" decoding="async" />
             <span class="exercise-name">Squats</span>
             <span class="exercise-subtitle">Bodyweight squat</span>
             <span class="card-bottom">Legs &amp; core<span class="card-arrow" aria-hidden="true">↗</span></span>
@@ -56,13 +44,7 @@
 
           <a class="exercise-card" href="{{ url_for('workout', exercise_id='lunge') }}">
             <span class="card-top"><span class="exercise-number">03</span></span>
-            <svg class="exercise-drawing" viewBox="0 0 260 140" fill="none" aria-hidden="true">
-              <path class="ground" d="M25 118H235" />
-              <circle cx="128" cy="23" r="12" />
-              <path d="M128 41L127 74L174 77L177 115H199M127 74L96 109L63 103L57 115M128 47L149 61L170 50" />
-              <path class="secondary-limb" d="M124 47L103 62L85 53" />
-              <circle class="joint" cx="127" cy="74" r="4" />
-            </svg>
+            <img class="exercise-photo" src="{{ url_for('static', path='images/exercises/lunge.png') }}" alt="" width="1536" height="1024" decoding="async" />
             <span class="exercise-name">Lunge</span>
             <span class="exercise-subtitle">Stationary lunge</span>
             <span class="card-bottom">Legs &amp; balance<span class="card-arrow" aria-hidden="true">↗</span></span>
