@@ -4,6 +4,8 @@ const path = require("node:path");
 const test = require("node:test");
 const vm = require("node:vm");
 
+const countCheckScript = fs.readFileSync(path.join(__dirname, "../frontend/static/js/count-check.js"), "utf8");
+
 const workoutScript = fs.readFileSync(path.join(__dirname, "../frontend/static/js/workout.js"), "utf8");
 
 const poseScript = fs.readFileSync(
@@ -94,6 +96,16 @@ function createPosePage(options = {}) {
     elements["#left-knee-angle"] = { textContent: "—" };
     elements["#right-knee-angle"] = { textContent: "—" };
   }
+  const comparisonEvents = new Map();
+  if (options.countCheck) {
+    Object.assign(elements, {
+      "#count-check-form": { addEventListener: (name, callback) => comparisonEvents.set(name, callback) },
+      "#manual-count": { value: "", disabled: true, reportValidity: () => true, addEventListener() {} },
+      "#check-app-count": { textContent: "—" },
+      "#compare-counts": { disabled: true },
+      "#count-check-status": { textContent: "", dataset: {} },
+    });
+  }
   const context = vm.createContext({
     document: {
       querySelector: (selector) => elements[selector],
@@ -115,6 +127,9 @@ function createPosePage(options = {}) {
       timers.delete(id);
     },
   });
+  if (options.countCheck) {
+    vm.runInContext(countCheckScript, context);
+  }
   if (options.exercise) {
     vm.runInContext(workoutScript, context);
   }
@@ -122,6 +137,7 @@ function createPosePage(options = {}) {
 
   return {
     calls, timers, dots, message, video, overlay, capture, elements, reset,
+    compare: () => comparisonEvents.get("submit")({ preventDefault() {} }),
     start: () => context.startPoseDetection(),
     stop: () => context.stopPoseDetection(),
   };
@@ -263,6 +279,7 @@ function createWorkoutPage(options = {}) {
   let sessionNumber = 0;
   const page = createPosePage({
     exercise: options.exercise || "pushup",
+    countCheck: options.countCheck,
     fetch(url, request) {
       if (options.fetch) {
         const custom = options.fetch(url, request);
@@ -540,5 +557,27 @@ test("network loss clears old observed posture feedback", async () => {
   await timer.callback();
   assert.equal(page.elements["#posture-feedback"].dataset.level, "unavailable");
   assert.match(page.elements["#feedback-message"].textContent, /No current posture assessment/);
+  page.stop();
+});
+
+
+test("camera results feed the stopped-trial panel and a new run clears the comparison", async () => {
+  const page = createWorkoutPage({ countCheck: true, count: 4, fetch(url) {
+    if (url.endsWith("/count-check")) return Promise.resolve(makeResponse({ outcome: "missed", message: "The app counted one fewer in this trial." }));
+  } });
+  await page.start();
+  assert.equal(page.elements["#check-app-count"].textContent, "4");
+  assert.equal(page.elements["#compare-counts"].disabled, true);
+  page.stop();
+  assert.equal(page.elements["#compare-counts"].disabled, false);
+  page.elements["#manual-count"].value = "5";
+  await page.compare();
+  const comparison = page.calls.find((call) => call.url.endsWith("/count-check"));
+  assert.deepEqual(JSON.parse(comparison.request.body), { manual_count: 5, observed_count: 4 });
+  assert.equal(page.elements["#count-check-status"].dataset.outcome, "missed");
+  await page.start();
+  assert.equal(page.elements["#manual-count"].value, "");
+  assert.equal(page.elements["#compare-counts"].disabled, true);
+  assert.equal(page.elements["#count-check-status"].dataset.outcome, "waiting");
   page.stop();
 });
