@@ -7,8 +7,8 @@ The user selects an exercise and turns on the camera. The app counts
 repetitions and provides feedback on the posture features it can observe.
 
 The user has authorized starting implementation. The current milestone is
-dedicated camera page: separate exercise preparation from the live camera,
-provide a large responsive preview, and display counting inside the camera view.
+homepage artwork: replace the line drawings on the three exercise cards with
+AI-generated athlete images matching the existing portfolio mockup style.
 All three counters are implemented. Detailed posture feedback is a later milestone.
 Implement only this milestone; later stages require user authorization.
 The structure below is the target plan. Some files exist; create the remaining
