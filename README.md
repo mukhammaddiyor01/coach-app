@@ -9,7 +9,8 @@ a separate plain Python counting service. All three exercises have
 a dedicated camera page with the count and position inside the video frame,
 tracking guidance, angle details, and a Reset count button. The pages now
 include a phone layout, touch-friendly controls, and front/rear camera preferences.
-Detailed posture feedback is a later milestone. The app cannot check every technique error.
+Visible posture cues are implemented for all three exercises. The app cannot
+check every technique error; feedback is not a full-form correctness score.
 
 Choose an exercise, read its setup instructions, then press Start workout.
 This opens `/workout/{exercise_id}/camera`, a dedicated large camera page.
@@ -146,10 +147,13 @@ No physical phone camera was used in that verification.
 - `backend/services/pushup_service.py` — Push Up validation and counting rules.
 - `backend/services/squats_service.py` — Squats rules for the visible leg.
 - `backend/services/lunge_service.py` — stationary Lunge rules for both legs.
+- `backend/services/posture_feedback.py` — framework-independent feedback data.
+- `backend/services/count_validation.py` — compare manual and displayed trial counts.
 - `backend/services/observations.py` — shared landmark validation and pixel conversion.
 - `backend/services/repetition_counter.py` — upper/lower sequence tracking for leg exercises.
 - `backend/workout_sessions.py` — isolated, temporary counting state and cleanup.
 - `frontend/static/js/workout.js` — display Python results and manage exercise sessions.
+- `frontend/static/js/count-check.js` — stopped-camera trial input and comparison requests.
 
 Current flow:
 Camera → local controller → vision adapter → landmarks → selected exercise service
@@ -186,7 +190,8 @@ a busy response rather than creating an inference queue.
 Only frames from this app's camera controls are accepted. Foreign origins and
 requests without the custom camera header are rejected. A successful response
 contains dimensions and up to 33 landmarks; no body is a normal empty result.
-Exercise frame endpoints also return the count, phase, relevant angles, and guidance.
+Exercise frame endpoints also return the count, phase, relevant angles, and
+guidance, plus posture feedback labelled observed, adjust, or unavailable.
 
 `POST /api/{exercise_id}/session` creates temporary counting state and returns
 the session identifier, exercise identifier, and initial workout result. Send
@@ -249,6 +254,22 @@ an explicit access-control and data-handling review.
 Automatic checks use simulated cameras and public test images, not your webcam.
 Real camera permissions and device behavior still need this browser check.
 
+## Posture feedback and manual trials
+
+The camera overlay explains visible features such as Push Up hip alignment,
+Squats torso position, and Lunge stance/two-knee transitions. Missing or
+low-confidence observations and paused tracking show Not assessed. Visible
+checks does not mean the entire exercise is correct.
+
+After a real-camera trial, press Stop camera and expand Compare counts after a
+camera trial. Enter your manual tally and compare it with the last app count
+received before Stop. The calculation runs in Python; frames and trial history
+are not saved. Start or Reset clears the previous comparison.
+
+See [the trial procedure and pending results worksheet](docs/POSTURE_AND_CAMERA_TESTS.md).
+Real exercise accuracy is pending user trials. No angle threshold has been
+tuned using invented camera results.
+
 ## Automated checks
 
 Install the optional HTTP test dependency:
@@ -261,7 +282,7 @@ python -m unittest discover -s tests -p 'test_*.py'
 With Node.js installed, run frontend lifecycle and rendering checks:
 
 ```bash
-node --test tests/camera.test.cjs tests/pose.test.cjs
+node --test tests/camera.test.cjs tests/pose.test.cjs tests/count-check.test.cjs
 ```
 
 Node.js is only used for tests. The app backend remains Python.
