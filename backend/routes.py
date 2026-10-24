@@ -8,7 +8,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from backend.exercises import EXERCISES
-from backend.schemas import PoseResult, WorkoutPoseResult, SessionResult
+from backend.schemas import CountCheckInput, CountCheckResult, PoseResult, WorkoutPoseResult, SessionResult
+from backend.services.count_validation import compare_counts
 from backend.services.observations import InvalidLandmarksError
 from backend.workout_sessions import (
     SessionLimitError, SessionNotFoundError, WorkoutSessions, get_workout_sessions,
@@ -200,3 +201,10 @@ async def analyze_workout_frame(
         raise HTTPException(status_code=404, detail=str(error)) from None
     frame = await read_frame(request)
     return await run_frame_analysis(session.analyze, detector, frame)
+
+
+@router.post("/api/{exercise_id}/count-check", response_model=CountCheckResult)
+def check_trial_count(request: Request, exercise_id: str, counts: CountCheckInput):
+    validate_camera_request(request)
+    validate_exercise_id(exercise_id)
+    return {"exercise_id": exercise_id, **compare_counts(counts.manual_count, counts.observed_count)}

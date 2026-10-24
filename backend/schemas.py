@@ -1,7 +1,7 @@
 """Public response formats. These describe data, not exercise rules."""
 from typing import Literal
 
-from pydantic import BaseModel, Field, FiniteFloat
+from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
 
 
 class PoseLandmark(BaseModel):
@@ -47,3 +47,19 @@ class SessionResult(BaseModel):
 
 class WorkoutPoseResult(PoseResult):
     workout: WorkoutResult
+
+
+class CountCheckInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    manual_count: int = Field(strict=True, ge=0, le=1000)
+    observed_count: int = Field(strict=True, ge=0, le=1000)
+
+
+class CountCheckResult(BaseModel):
+    exercise_id: Literal["pushup", "squats", "lunge"]
+    manual_count: int
+    observed_count: int
+    difference: int
+    outcome: Literal["match", "extra", "missed"]
+    message: str
