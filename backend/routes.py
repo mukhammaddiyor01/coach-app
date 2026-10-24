@@ -58,6 +58,17 @@ def workout(request: Request, exercise_id: str):
     )
 
 
+@router.get("/workout/{exercise_id}/camera", response_class=HTMLResponse, name="camera")
+def camera(request: Request, exercise_id: str):
+    exercise = EXERCISES.get(exercise_id)
+    return templates.TemplateResponse(
+        request=request,
+        name="camera.html",
+        context={"exercise": exercise, "exercise_id": exercise_id},
+        status_code=200 if exercise is not None else 404,
+    )
+
+
 def validate_camera_request(request: Request):
     # A custom header prevents another website from submitting a simple form.
     if request.headers.get("x-coach-camera") != "1":

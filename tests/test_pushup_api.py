@@ -119,7 +119,7 @@ class PushUpApiTests(unittest.TestCase):
     def test_each_page_loads_matching_counting_controls(self):
         for exercise, angle in (("pushup", "elbow-angle"), ("squats", "knee-angle"), ("lunge", "left-knee-angle")):
             with self.subTest(exercise=exercise):
-                response = self.client.get("/workout/" + exercise)
+                response = self.client.get("/workout/" + exercise + "/camera")
                 self.assertEqual(response.status_code, 200)
                 self.assertIn('data-exercise="' + exercise + '"', response.text)
                 self.assertIn('id="rep-count"', response.text)

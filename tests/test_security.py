@@ -16,7 +16,7 @@ class HttpPrivacyTests(unittest.TestCase):
         self.addCleanup(self.client.close)
 
     def test_pages_assets_and_errors_include_privacy_headers(self):
-        paths = ["/", "/workout/pushup", "/workout/unknown", "/static/js/camera.js"]
+        paths = ["/", "/workout/pushup", "/workout/pushup/camera", "/workout/unknown", "/workout/unknown/camera", "/static/js/camera.js"]
 
         for path in paths:
             with self.subTest(path=path):
@@ -51,7 +51,13 @@ class HttpPrivacyTests(unittest.TestCase):
     def test_all_exercise_pages_still_load_with_camera_controls(self):
         for exercise in ("pushup", "squats", "lunge"):
             with self.subTest(exercise=exercise):
-                response = self.client.get(f"/workout/{exercise}")
+                preparation = self.client.get(f"/workout/{exercise}")
+                self.assertEqual(preparation.status_code, 200)
+                self.assertIn('id="start-workout"', preparation.text)
+                self.assertIn(f'/workout/{exercise}/camera', preparation.text)
+                self.assertNotIn('id="start-camera"', preparation.text)
+                self.assertNotIn('js/camera.js', preparation.text)
+                response = self.client.get(f"/workout/{exercise}/camera")
                 self.assertEqual(response.status_code, 200)
                 self.assertIn('id="start-camera"', response.text)
 
