@@ -7,9 +7,10 @@ The user selects an exercise and turns on the camera. The app counts
 repetitions and provides feedback on the posture features it can observe.
 
 The user has authorized starting implementation. The current milestone is
-homepage artwork: replace the line drawings on the three exercise cards with
-AI-generated athlete images matching the existing portfolio mockup style.
-All three counters are implemented. Detailed posture feedback is a later milestone.
+posture feedback and real-camera validation: add specific feedback for visible
+features of each exercise, then provide a manual count-comparison panel and
+a repeatable camera test procedure. All three counters are implemented.
+Do not claim real exercise accuracy until the user completes the camera trials.
 Implement only this milestone; later stages require user authorization.
 The structure below is the target plan. Some files exist; create the remaining
 files only when their implementation stage is authorized.

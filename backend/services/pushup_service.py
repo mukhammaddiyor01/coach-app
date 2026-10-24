@@ -2,6 +2,7 @@
 import math
 
 from backend.services.calculations import InvalidGeometryError, calculate_angle
+from backend.services.posture_feedback import make_feedback
 from backend.services.observations import InvalidLandmarksError, validate_observation
 
 # Prototype settings; these are not universal exercise standards.
@@ -13,6 +14,8 @@ MIN_CONFIDENCE = 0.65
 POSITION_HOLD_SECONDS = 0.15
 MAX_OBSERVATION_GAP_SECONDS = 1.0
 MIN_TORSO_PIXELS = 20
+MAX_BODY_HEIGHT_TO_WIDTH_RATIO = 0.6
+MIN_WRIST_DROP_TO_TORSO_RATIO = 0.1
 BODY_SIDES = {
     "left": (11, 13, 15, 23, 25, 27),
     "right": (12, 14, 16, 24, 26, 28),
@@ -37,7 +40,14 @@ class PushUpService:
         self.candidate_position = None
         self.candidate_since = None
 
-    def _result(self, status, message, elbow_angle=None, body_angle=None):
+    def _result(self, status, message, elbow_angle=None, body_angle=None, knee_angle=None, feedback=None):
+        if feedback is None:
+            feedback = make_feedback(
+                "observed" if status == "tracking" else "unavailable",
+                "visible_alignment" if status == "tracking" else "tracking_unavailable",
+                "Keep your shoulders, hips, and ankles aligned as you move." if status == "tracking" else message,
+                self.selected_side,
+            )
         return {
             "rep_count": self.rep_count,
             "phase": self.current_phase,
@@ -45,6 +55,8 @@ class PushUpService:
             "message": message,
             "elbow_angle": round(elbow_angle, 1) if elbow_angle is not None else None,
             "body_angle": round(body_angle, 1) if body_angle is not None else None,
+            "knee_angle": round(knee_angle, 1) if knee_angle is not None else None,
+            "feedback": feedback,
         }
 
     def update(self, landmarks, width, height, observed_at):
@@ -81,15 +93,16 @@ class PushUpService:
         torso_length = math.dist(shoulder, hip)
         body_width = abs(ankle[0] - shoulder[0])
         body_height = abs(ankle[1] - shoulder[1])
-        is_horizontal = body_width >= torso_length and body_height <= body_width * 0.6
-        is_supported = wrist[1] - shoulder[1] >= torso_length * 0.1
-        is_body_straight = body_angle >= MIN_BODY_ANGLE and knee_angle >= MIN_KNEE_ANGLE
-
-        if torso_length < MIN_TORSO_PIXELS or not (is_horizontal and is_supported and is_body_straight):
+        is_horizontal = body_width >= torso_length and body_height <= body_width * MAX_BODY_HEIGHT_TO_WIDTH_RATIO
+        is_supported = wrist[1] - shoulder[1] >= torso_length * MIN_WRIST_DROP_TO_TORSO_RATIO
+        feedback = self._check_alignment(
+            shoulder, hip, ankle, torso_length, is_horizontal, is_supported,
+            body_angle, knee_angle, side,
+        )
+        if feedback is not None:
             self._discard_incomplete_rep()
             return self._result(
-                "waiting", "Use a side view with your whole body in a straight plank position.",
-                elbow_angle, body_angle,
+                "waiting", feedback["message"], elbow_angle, body_angle, knee_angle, feedback,
             )
 
         self.selected_side = side
@@ -99,7 +112,26 @@ class PushUpService:
             "up": "Bend your elbows to reach the lower position.",
             "down": "Return to the upper position to complete one repetition.",
         }
-        return self._result("tracking", messages[self.current_phase], elbow_angle, body_angle)
+        return self._result("tracking", messages[self.current_phase], elbow_angle, body_angle, knee_angle)
+
+    def _check_alignment(self, shoulder, hip, ankle, torso_length, is_horizontal,
+                         is_supported, body_angle, knee_angle, side):
+        if torso_length < MIN_TORSO_PIXELS:
+            return make_feedback("unavailable", "body_too_small", "Move closer while keeping your whole body in view.", side)
+        if not is_horizontal:
+            return make_feedback("unavailable", "plank_view_needed", "Use a side view of your plank position before counting.", side)
+        if not is_supported:
+            return make_feedback("adjust", "wrist_position", "Keep your wrists below your shoulders in the side view.", side)
+        if knee_angle < MIN_KNEE_ANGLE:
+            return make_feedback("adjust", "knees_bent", "Extend your knees to keep your legs straight.", side)
+        if body_angle < MIN_BODY_ANGLE:
+            # Image y grows downward. Compare the hip with the shoulder-to-ankle line.
+            hip_fraction = (hip[0] - shoulder[0]) / (ankle[0] - shoulder[0])
+            aligned_hip_height = shoulder[1] + hip_fraction * (ankle[1] - shoulder[1])
+            if hip[1] > aligned_hip_height:
+                return make_feedback("adjust", "hips_lowered", "Lift your hips toward the shoulder-to-ankle line.", side)
+            return make_feedback("adjust", "hips_raised", "Lower your hips toward the shoulder-to-ankle line.", side)
+        return None
 
     def _validate_observation(self, landmarks, width, height, observed_at):
         validate_observation(landmarks, width, height, observed_at, self.last_observed_at)
