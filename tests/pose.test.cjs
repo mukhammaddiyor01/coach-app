@@ -79,6 +79,9 @@ function createPosePage(options = {}) {
       "#body-angle": { textContent: "—" },
       "#workout-message": { textContent: "Start the camera." },
       "#reset-count": reset,
+      "#posture-feedback": { dataset: {} },
+      "#feedback-label": { textContent: "Not assessed" },
+      "#feedback-message": { textContent: "Waiting for tracking." },
     });
   }
   if (options.exercise === "squats") {
@@ -499,5 +502,43 @@ test("portrait capture and a later landscape frame keep landmarks aligned", asyn
   assert.equal(page.overlay.width, 640);
   assert.equal(page.overlay.height, 360);
   assert.deepEqual(page.dots.at(-1), [320, 180]);
+  page.stop();
+});
+
+
+test("posture feedback displays the Python cue without making a correctness score", async () => {
+  const page = createWorkoutPage({ fetch(url) {
+    if (url.endsWith("/frame")) return Promise.resolve(makeResponse({
+      ...makePoseResult(), workout: { ...workout(), feedback: {
+        level: "adjust", code: "hips_raised", message: "Lower your hips toward the shoulder-to-ankle line.", side: "left",
+      } },
+    }));
+  } });
+  await page.start();
+  assert.equal(page.elements["#posture-feedback"].dataset.level, "adjust");
+  assert.equal(page.elements["#feedback-label"].textContent, "Adjust position");
+  assert.match(page.elements["#feedback-message"].textContent, /Lower your hips/);
+  page.stop();
+  assert.equal(page.elements["#posture-feedback"].dataset.level, "unavailable");
+  assert.equal(page.elements["#feedback-label"].textContent, "Not assessed");
+});
+
+test("network loss clears old observed posture feedback", async () => {
+  let calls = 0;
+  const page = createWorkoutPage({ fetch(url) {
+    if (url.endsWith("/frame")) {
+      if (++calls > 1) return Promise.reject(new Error("offline"));
+      return Promise.resolve(makeResponse({ ...makePoseResult(), workout: {
+        ...workout(), feedback: { level: "observed", code: "visible_alignment", message: "Visible joints are being tracked." },
+      } }));
+    }
+  } });
+  await page.start();
+  assert.equal(page.elements["#feedback-label"].textContent, "Visible checks");
+  const [timerId, timer] = [...page.timers.entries()].find(([, timer]) => timer.delay === 200);
+  page.timers.delete(timerId);
+  await timer.callback();
+  assert.equal(page.elements["#posture-feedback"].dataset.level, "unavailable");
+  assert.match(page.elements["#feedback-message"].textContent, /No current posture assessment/);
   page.stop();
 });

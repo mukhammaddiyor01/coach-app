@@ -18,10 +18,25 @@ function createWorkoutControls() {
     ["knee_angle", "#knee-angle"],
     ["left_knee_angle", "#left-knee-angle"],
     ["right_knee_angle", "#right-knee-angle"],
+    ["torso_lean_angle", "#torso-lean-angle"],
   ].map(([name, selector]) => [name, document.querySelector(selector)])
     .filter(([, element]) => element);
   const message = document.querySelector("#workout-message");
   const reset = document.querySelector("#reset-count");
+  const feedbackPanel = document.querySelector("#posture-feedback");
+  const feedbackLabel = document.querySelector("#feedback-label");
+  const feedbackMessage = document.querySelector("#feedback-message");
+  const feedbackLabels = { observed: "Visible checks", adjust: "Adjust position", unavailable: "Not assessed" };
+
+  function showFeedback(feedback) {
+    if (!feedbackPanel || !feedbackLabel || !feedbackMessage) {
+      return;
+    }
+    const level = feedbackLabels[feedback?.level] ? feedback.level : "unavailable";
+    feedbackPanel.dataset.level = level;
+    feedbackLabel.textContent = feedbackLabels[level];
+    feedbackMessage.textContent = feedback?.message || "No posture assessment is available yet.";
+  }
   const phaseLabels = { ready: "Get ready", up: "Upper position", down: "Lower position" };
 
   function showResult(result) {
@@ -31,6 +46,7 @@ function createWorkoutControls() {
       element.textContent = result[name] == null ? "—" : `${result[name]}°`;
     }
     message.textContent = result.message;
+    showFeedback(result.feedback);
   }
 
   function showPaused(text) {
@@ -39,6 +55,7 @@ function createWorkoutControls() {
       element.textContent = "—";
     }
     message.textContent = text;
+    showFeedback({ level: "unavailable", message: "Tracking is paused. No current posture assessment." });
   }
 
   async function createSession(signal) {

@@ -301,3 +301,45 @@
     font-size: 44px;
   }
 }
+
+
+.posture-feedback {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: grid;
+  gap: 6px;
+  width: min(280px, calc(100% - 200px));
+  padding: 12px 14px;
+  border: 1px solid #778574;
+  border-radius: 12px;
+  background: rgba(9, 20, 15, 0.94);
+  color: #e1e9da;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+#feedback-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.posture-feedback[data-level="observed"] {
+  border-color: #a4bf71;
+}
+
+.posture-feedback[data-level="adjust"] {
+  border-color: #e6bd6d;
+  color: #ffe0a2;
+}
+
+@media (max-width: 650px) {
+  .posture-feedback {
+    top: 12px;
+    left: 12px;
+    width: calc(100% - 146px);
+    padding: 10px;
+    font-size: 12px;
+  }
+}

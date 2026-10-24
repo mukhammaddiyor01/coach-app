@@ -18,11 +18,20 @@ class PoseResult(BaseModel):
     height: int = Field(gt=0, le=1280)
 
 
+class PostureFeedback(BaseModel):
+    level: Literal["observed", "adjust", "unavailable"]
+    code: str
+    message: str
+    side: Literal["left", "right"] | None = None
+
+
 class WorkoutResult(BaseModel):
     rep_count: int = Field(ge=0)
     phase: Literal["ready", "up", "down"]
     status: Literal["waiting", "tracking"]
     message: str
+    feedback: PostureFeedback
+    torso_lean_angle: FiniteFloat | None = None
     elbow_angle: FiniteFloat | None = None
     body_angle: FiniteFloat | None = None
     knee_angle: FiniteFloat | None = None

@@ -36,6 +36,10 @@
           </div>
           <section id="workout-results" data-exercise="{{ exercise_id }}" class="camera-hud" aria-labelledby="results-title">
             <h2 id="results-title" class="visually-hidden">Your {{ exercise.title }} repetitions</h2>
+            <div id="posture-feedback" class="posture-feedback" data-level="unavailable" role="status">
+              <span id="feedback-label">Not assessed</span>
+              <span id="feedback-message">Keep your body in view to check visible posture features.</span>
+            </div>
             <div class="camera-counter">
               <span class="counter-label">REPETITIONS</span>
               <span id="rep-count" aria-live="polite" aria-atomic="true">0</span>
@@ -70,13 +74,18 @@
             {% if exercise_id == 'pushup' %}
             <div><dt>Elbow angle</dt><dd id="elbow-angle">—</dd></div>
             <div><dt>Body angle</dt><dd id="body-angle">—</dd></div>
+            <div><dt>Knee angle</dt><dd id="knee-angle">—</dd></div>
             {% elif exercise_id == 'squats' %}
             <div><dt>Knee angle</dt><dd id="knee-angle">—</dd></div>
             {% else %}
             <div><dt>Left knee angle</dt><dd id="left-knee-angle">—</dd></div>
             <div><dt>Right knee angle</dt><dd id="right-knee-angle">—</dd></div>
             {% endif %}
+            {% if exercise_id != 'pushup' %}
+            <div><dt>Torso lean from vertical</dt><dd id="torso-lean-angle">—</dd></div>
+            {% endif %}
           </dl>
+          <p>Feedback describes visible features only. It does not assess unseen joints, joint loading, pain, or every technique error.</p>
           <p>Stop keeps the last received count on screen. Start or Reset begins at zero. Counting is experimental and only checks visible features.</p>
           {% if exercise_id == 'lunge' %}
           <p>Stationary lunges only. Keep your feet in place and both knees visible.</p>
