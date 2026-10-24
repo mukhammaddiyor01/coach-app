@@ -73,7 +73,8 @@ coach-app/
 ├── frontend/
 │   ├── templates/
 │   │   ├── index.html         # Selection page for the three exercises
-│   │   └── workout.html       # Selected exercise, camera, and results
+│   │   ├── workout.html       # Exercise preparation and Start workout link
+│   │   └── camera.html        # Large live camera with counting inside the preview
 │   └── static/
 │       ├── css/
 │       ├── js/

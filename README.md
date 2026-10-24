@@ -5,13 +5,22 @@ A local exercise coach for Push Up, Squats, and Lunge.
 ## Current progress
 
 Stage seven is implemented: Push Up, Squats, and stationary Lunge each have
-a separate plain Python counting service. All three pages display the count,
-position, relevant angles, guidance, and a Reset count button. The pages now
+a separate plain Python counting service. All three exercises have
+a dedicated camera page with the count and position inside the video frame,
+tracking guidance, angle details, and a Reset count button. The pages now
 include a phone layout, touch-friendly controls, and front/rear camera preferences.
-Detailed posture
-feedback is a later milestone. The app cannot check every technique error.
+Detailed posture feedback is a later milestone. The app cannot check every technique error.
 
-Choose an exercise, read its setup instructions, and press Start camera.
+Choose an exercise, read its setup instructions, then press Start workout.
+This opens `/workout/{exercise_id}/camera`, a dedicated large camera page.
+Choose Front camera or Rear camera, then press Start camera to allow access.
+Opening either page alone does not request camera permission. Use Setup to
+return to instructions; navigating away stops the camera and analysis.
+
+The repetition count and phase appear inside the camera frame, with guidance
+along its lower edge. Stop keeps the last received count visible there even
+when the video is off. Expand Camera tips and tracking details for angles and
+setup guidance.
 Sampled JPEG frames are sent only to the Python server on this computer.
 MediaPipe returns body landmarks; the browser draws visible points and lines.
 If no body is found, the app asks you to move into view.
@@ -78,12 +87,14 @@ can take a few seconds while the model loads.
 
 ## Mobile web
 
-The phone layout puts the camera and results before detailed instructions.
-Exercise cards become compact rows, exercise tabs share the screen width, and
+The phone flow separates preparation from the large camera view. Start workout
+opens the camera page, where counting stays over the video and Start/Stop/Reset
+remain below it. Exercise cards become compact rows, exercise tabs share the
+preparation screen width, and
 Start/Stop/Reset controls have large touch targets. Safe-area padding accounts
 for screen cutouts. Video uses its native aspect ratio with a viewport-height
-limit, so portrait and landscape frames remain fully visible. The landmark
-canvas uses the same contained alignment as the video. Browser zoom stays enabled.
+limit. The camera page contains portrait and landscape frames without cropping
+the body; the landmark canvas uses the same contained alignment as the video. Browser zoom stays enabled.
 
 Choose Front camera or Rear camera before pressing Start camera. The selection
 is a preference: a single-camera device may use its available camera. Stop the
@@ -112,9 +123,11 @@ Manual mobile checks remain necessary:
 5. Hide the tab or lock the phone. The camera should stop; returning should
    require an explicit Start. Verify counts and Reset for all three exercises.
 
-Automated checks cover camera preferences, permission races, and portrait to
-landscape frame dimensions. HTML rendering is checked, but the phone layout
-has not been visually verified in a connected browser or on a physical phone.
+Automated checks cover camera preferences, permission races, portrait to
+landscape frame dimensions, preparation-to-camera links, and a single count
+inside the camera screen. The new camera layout was inspected in a desktop
+browser and at 320- and 390-pixel viewport widths without horizontal overflow.
+No physical phone camera was used in that verification.
 
 ## Clear responsibilities
 
@@ -124,7 +137,9 @@ has not been visually verified in a connected browser or on a physical phone.
 - `backend/exercises.py` — exercise names and display instructions.
 - `backend/vision/pose_detector.py` — JPEG decoding and MediaPipe inference.
 - `backend/security.py` — HTTP policies and allowed public assets.
-- `frontend/templates/` — page layout and setup instructions.
+- `frontend/templates/workout.html` — preparation and navigation to the camera.
+- `frontend/templates/camera.html` — large camera screen and on-screen counter.
+- `frontend/static/css/camera-page.css` — responsive camera screen and overlays.
 - `frontend/static/js/camera.js` — camera permission, start, and stop.
 - `frontend/static/js/pose.js` — sample frames, call the local API, draw landmarks.
 - `backend/services/calculations.py` — shared pixel-based angle calculations.
@@ -215,9 +230,10 @@ an explicit access-control and data-handling review.
 
 ## Verify in your browser
 
-1. Open a workout page and allow camera access after pressing Start camera.
+1. Open a workout page, press Start workout, then allow camera access after
+   pressing Start camera on the dedicated camera page.
 2. Keep your whole body visible. Look for body landmarks over the video.
-3. On each exercise page, hold the upper position, lower with control, and
+3. On each exercise camera page, hold the upper position, lower with control, and
    return up. The count should increase once. Holding either position should
    not add repetitions. On Squats, a half movement should not count. On Lunge,
    keep both legs visible and feet in place; both knees must bend and straighten.
