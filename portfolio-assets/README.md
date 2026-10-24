@@ -7,3 +7,5 @@ addresses, illustrative screen details, and displayed counts are placeholders.
 The phone images represent the responsive web app, not a released native app.
 
 - `coach-app-hero.png`: project cover with laptop and phone.
+
+- `coach-app-mobile.png`: mobile selection, camera, and preparation screens.
