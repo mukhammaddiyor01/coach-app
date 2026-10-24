@@ -78,10 +78,10 @@ From the project root:
 
 ```bash
 source .venv/bin/activate
-python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000 --no-access-log
+python -m uvicorn backend.main:app --reload --host localhost --port 8000 --no-access-log
 ```
 
-Open http://127.0.0.1:8000 in your browser.
+Open localhost:8000 in your browser.
 Press `Ctrl + C` in the terminal to stop the server.
 Use localhost or HTTPS for browser camera access. The first analysis request
 can take a few seconds while the model loads.
@@ -162,11 +162,11 @@ The frontend does not calculate exercise angles or count repetitions.
 
 The services use named experimental settings:
 
-| Exercise | Upper position | Lower position |
-| --- | --- | --- |
-| Push Up | Elbow angle at least 155° | Elbow angle at most 100° |
-| Squats | Knee angle at least 160° | Knee angle at most 105° |
-| Lunge | Both knee angles at least 150° | Both knee angles at most 110° |
+| Exercise | Upper position                 | Lower position                |
+| -------- | ------------------------------ | ----------------------------- |
+| Push Up  | Elbow angle at least 155°      | Elbow angle at most 100°      |
+| Squats   | Knee angle at least 160°       | Knee angle at most 105°       |
+| Lunge    | Both knee angles at least 150° | Both knee angles at most 110° |
 
 Positions must persist for at least 0.15 seconds. Gaps longer than one second
 discard an incomplete repetition. Push Up additionally requires a horizontal,
