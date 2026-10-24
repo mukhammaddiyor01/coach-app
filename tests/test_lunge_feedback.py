@@ -34,6 +34,9 @@ class LungeFeedbackTests(unittest.TestCase):
         service.update(one_bent, 640, 480, 0.4)
         result = service.update(one_bent, 640, 480, 0.6)
         self.assertEqual(result["feedback"]["code"], "bend_both_knees")
+        self.assertIn("110° or less", result["feedback"]["message"])
+        self.assertIn("Left:", result["feedback"]["message"])
+        self.assertEqual(result["feedback"]["level"], "observed")
         self.assertEqual(hold(service, "up", 0.8)["rep_count"], 0)
 
     def test_stance_change_requires_a_new_upper_sequence(self):
@@ -43,6 +46,39 @@ class LungeFeedbackTests(unittest.TestCase):
         result = service.update(lunge_body(mirrored=True), 640, 480, 0.7)
         self.assertEqual(result["feedback"]["code"], "stance_changed")
         self.assertEqual(hold(service, "up", 0.8)["rep_count"], 0)
+
+    def test_starting_with_bent_knees_explains_why_counting_has_not_started(self):
+        service = LungeService()
+        result = hold(service, "down", 0)
+        self.assertEqual(result["phase"], "ready")
+        self.assertEqual(result["rep_count"], 0)
+        self.assertEqual(result["feedback"]["code"], "starting_position_unconfirmed")
+        self.assertIn("150° or more", result["feedback"]["message"])
+        self.assertIn("Left: 90.0°, right: 90.0°", result["feedback"]["message"])
+        self.assertEqual(hold(service, "up", 0.4)["rep_count"], 0)
+        hold(service, "down", 0.8)
+        self.assertEqual(hold(service, "up", 1.2)["rep_count"], 1)
+
+    def test_first_upper_observation_explains_confirmation_hold(self):
+        service = LungeService()
+        result = service.update(lunge_body(), 640, 480, 0)
+        self.assertEqual(result["phase"], "ready")
+        self.assertEqual(result["feedback"]["code"], "upper_hold_needed")
+        self.assertEqual(service.update(lunge_body(), 640, 480, 0.2)["phase"], "up")
+
+    def test_unconfirmed_finish_reports_measured_knees_without_counting(self):
+        service = LungeService()
+        hold(service, "up", 0)
+        hold(service, "down", 0.4)
+        one_bent = lunge_body("down")
+        one_bent[26] = dict(lunge_body()[26])
+        result = service.update(one_bent, 640, 480, 0.8)
+        self.assertEqual(result["phase"], "down")
+        self.assertEqual(result["rep_count"], 0)
+        self.assertEqual(result["feedback"]["code"], "upper_position_unconfirmed")
+        self.assertIn("150° or more", result["feedback"]["message"])
+        self.assertIn("Left:", result["feedback"]["message"])
+        self.assertEqual(hold(service, "up", 1)["rep_count"], 1)
 
     def test_valid_observation_and_reset_do_not_claim_complete_form_correctness(self):
         service = LungeService()

@@ -137,15 +137,36 @@ class LungeService:
             "up": "Bend both knees to lower in place.",
             "down": "Return to the upper position to complete one repetition.",
         }
-        feedback = None
-        if position is None and self.counter.current_phase == "up":
-            if min(left_angle, right_angle) <= DOWN_KNEE_ANGLE:
-                feedback = make_feedback("adjust", "bend_both_knees", "Lower position needs both knees to bend.", side)
-            else:
-                feedback = make_feedback("observed", "lower_position_unconfirmed", "Lower position is not confirmed yet.", side)
-        elif position is None and self.counter.current_phase == "down":
-            feedback = make_feedback("observed", "upper_position_unconfirmed", "Return both legs to the upper position to finish the repetition.", side)
+        feedback = self._position_feedback(position, left_angle, right_angle, side)
         return self._result("tracking", messages[self.counter.current_phase], left_angle, right_angle, torso_lean_angle, feedback)
+
+    def _position_feedback(self, position, left_angle, right_angle, side):
+        angles = f"Left: {left_angle:.1f}°, right: {right_angle:.1f}°."
+        phase = self.counter.current_phase
+
+        # Visible joints alone do not mean the starting position is confirmed.
+        if phase == "ready":
+            if position == "up":
+                return make_feedback("observed", "upper_hold_needed", "Upper position detected. Hold briefly to confirm the start.", side)
+            return make_feedback(
+                "observed", "starting_position_unconfirmed",
+                f"Start not confirmed: both knee angles must reach {UP_KNEE_ANGLE}° or more. {angles}", side,
+            )
+
+        if position is not None:
+            return None
+
+        if phase == "up":
+            code = "bend_both_knees" if min(left_angle, right_angle) <= DOWN_KNEE_ANGLE else "lower_position_unconfirmed"
+            return make_feedback(
+                "observed", code,
+                f"Lower position not confirmed: both knee angles must reach {DOWN_KNEE_ANGLE}° or less. {angles}", side,
+            )
+
+        return make_feedback(
+            "observed", "upper_position_unconfirmed",
+            f"Finish not confirmed: both knee angles must return to {UP_KNEE_ANGLE}° or more. {angles}", side,
+        )
 
     def _check_stance(self, is_split_stance, ankles_level, is_upright, hips_above_feet, side):
         if not is_split_stance:
