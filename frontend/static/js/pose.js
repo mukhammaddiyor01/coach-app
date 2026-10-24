@@ -76,6 +76,7 @@ async function startPoseDetection() {
   const runId = ++poseRunId;
   poseMessage.textContent = "Starting local body detection…";
   if (workoutControls) {
+    workoutControls.prepareSession();
     const request = new AbortController();
     poseRequest = request;
     const timeout = setTimeout(() => request.abort(), REQUEST_TIMEOUT_MS);

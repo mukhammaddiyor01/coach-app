@@ -10,6 +10,7 @@ function createWorkoutControls() {
     return null;
   }
   const sessionEndpoint = `/api/${exerciseId}/session`;
+  const countCheck = typeof createCountCheck === "function" ? createCountCheck(exerciseId) : null;
   const count = document.querySelector("#rep-count");
   const phase = document.querySelector("#rep-phase");
   const angleDisplays = [
@@ -47,6 +48,7 @@ function createWorkoutControls() {
     }
     message.textContent = result.message;
     showFeedback(result.feedback);
+    countCheck?.showCount(result.rep_count);
   }
 
   function showPaused(text) {
@@ -103,12 +105,16 @@ function createWorkoutControls() {
 
   return {
     frameEndpoint: `/api/${exerciseId}/frame`,
+    prepareSession() {
+      countCheck?.startSession();
+    },
     createSession,
     closeSession,
     showResult,
     showPaused,
     setActive(active) {
       reset.disabled = !active;
+      countCheck?.setActive(active);
     },
   };
 }

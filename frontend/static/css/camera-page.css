@@ -343,3 +343,70 @@
     font-size: 12px;
   }
 }
+
+
+.count-check-panel {
+  padding: 0 16px 12px;
+  border: 1px solid #52664f;
+  border-radius: 12px;
+}
+
+.trial-steps {
+  padding-left: 20px;
+}
+
+.trial-steps li + li {
+  margin-top: 8px;
+}
+
+.count-check-form {
+  display: grid;
+  grid-template-columns: minmax(100px, 180px) minmax(140px, 200px);
+  gap: 8px 12px;
+  align-items: center;
+}
+
+.count-check-form label {
+  grid-column: 1 / -1;
+}
+
+.count-check-form input {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px;
+  border: 1px solid #849b7e;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 16px;
+}
+
+.count-check-form .stop-button {
+  color: #f4f7ed;
+  border-color: #849b7e;
+}
+
+.count-check-form :focus-visible {
+  outline: 3px solid #dff3a3;
+  outline-offset: 4px;
+}
+
+.count-check-form :disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+#count-check-status[data-outcome="match"] {
+  color: #dff3a3;
+}
+
+#count-check-status[data-outcome="extra"],
+#count-check-status[data-outcome="missed"] {
+  color: #ffe0a2;
+}
+
+@media (max-width: 400px) {
+  .count-check-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

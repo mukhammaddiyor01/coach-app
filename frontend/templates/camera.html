@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', path='css/camera-page.css') }}" />
     {% if exercise %}
+    <script src="{{ url_for('static', path='js/count-check.js') }}" defer></script>
     <script src="{{ url_for('static', path='js/workout.js') }}" defer></script>
     <script src="{{ url_for('static', path='js/pose.js') }}" defer></script>
     <script src="{{ url_for('static', path='js/camera.js') }}" defer></script>
@@ -65,6 +66,23 @@
           <p id="camera-message" role="status">Press Start camera to allow access. Frames are processed on this computer and are not saved.</p>
           <p id="pose-message" role="status">Body detection is off.</p>
         </div>
+
+        <details class="live-details count-check-panel">
+          <summary>Compare counts after a camera trial</summary>
+          <ol class="trial-steps">
+            <li>Start the camera and press Reset count.</li>
+            <li>Count your full repetitions yourself while the app counts.</li>
+            <li>Press Stop camera, enter your manual tally, and compare.</li>
+          </ol>
+          <p>Last received app count: <strong id="check-app-count">—</strong></p>
+          <form id="count-check-form" class="count-check-form">
+            <label for="manual-count">Repetitions you counted yourself</label>
+            <input id="manual-count" name="manual_count" type="number" min="0" max="1000" step="1" inputmode="numeric" required disabled />
+            <button id="compare-counts" class="stop-button" type="submit" disabled>Compare counts</button>
+          </form>
+          <p id="count-check-status" role="status" data-outcome="waiting">Start a camera trial first. No count has been received yet.</p>
+          <p>This compares your tally with the last count received before Stop. One matching trial is not an accuracy score. Counts and trial results are not saved.</p>
+        </details>
 
         <details class="live-details">
           <summary>Camera tips and tracking details</summary>
