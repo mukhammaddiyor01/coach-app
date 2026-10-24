@@ -6,6 +6,7 @@ from backend.services.observations import (
     InvalidLandmarksError, pixel_points, validate_observation, visible_joints,
 )
 from backend.services.repetition_counter import RepetitionCounter
+from backend.services.posture_feedback import make_feedback
 
 # Experimental side-view settings for stationary lunges.
 UP_KNEE_ANGLE = 150
@@ -40,11 +41,20 @@ class LungeService:
         self.counter.discard_incomplete_rep()
         self._clear_stance()
 
-    def _result(self, status, message, left_angle=None, right_angle=None):
+    def _result(self, status, message, left_angle=None, right_angle=None, torso_lean_angle=None, feedback=None):
+        if feedback is None:
+            feedback = make_feedback(
+                "observed" if status == "tracking" else "unavailable",
+                "visible_split_stance" if status == "tracking" else "tracking_unavailable",
+                "Keep both legs visible and maintain the same split stance." if status == "tracking" else message,
+                self.selected_side,
+            )
         return {
             **self.counter.result(status, message),
             "left_knee_angle": round(left_angle, 1) if left_angle is not None else None,
             "right_knee_angle": round(right_angle, 1) if right_angle is not None else None,
+            "torso_lean_angle": round(torso_lean_angle, 1) if torso_lean_angle is not None else None,
+            "feedback": feedback,
         }
 
     def _choose_torso_side(self, landmarks):
@@ -97,9 +107,11 @@ class LungeService:
         ankles_level = abs(left_ankle[1] - right_ankle[1]) <= mean_shin_length * MAX_ANKLE_HEIGHT_TO_SHIN_RATIO
         is_upright = hip[1] - shoulder[1] >= torso_length * MIN_TORSO_VERTICAL_RATIO
         hips_above_feet = max(left_hip[1], right_hip[1]) < min(left_ankle[1], right_ankle[1]) - mean_shin_length * MIN_HIP_HEIGHT_TO_SHIN_RATIO
-        if not (is_split_stance and ankles_level and is_upright and hips_above_feet):
+        torso_lean_angle = math.degrees(math.atan2(abs(shoulder[0] - hip[0]), hip[1] - shoulder[1]))
+        feedback = self._check_stance(is_split_stance, ankles_level, is_upright, hips_above_feet, side)
+        if feedback is not None:
             self._discard_incomplete_rep()
-            return self._result("waiting", "Stand side-on with one foot forward and the other behind.", left_angle, right_angle)
+            return self._result("waiting", feedback["message"], left_angle, right_angle, torso_lean_angle, feedback)
 
         # A changed lead leg or large stance change starts a fresh sequence.
         if self.stance_direction is not None:
@@ -107,7 +119,8 @@ class LungeService:
             changed_width = abs(stance_ratio - self.stance_ratio) > self.stance_ratio * MAX_STANCE_RATIO_CHANGE
             if changed_leg or changed_width:
                 self._discard_incomplete_rep()
-                return self._result("waiting", "Keep your feet in place, then hold the upper position again.", left_angle, right_angle)
+                feedback = make_feedback("adjust", "stance_changed", "Your stance changed in the camera view. Hold the upper position again.", side)
+                return self._result("waiting", feedback["message"], left_angle, right_angle, torso_lean_angle, feedback)
 
         self.selected_side = side
         self.stance_direction = stance_direction
@@ -124,4 +137,23 @@ class LungeService:
             "up": "Bend both knees to lower in place.",
             "down": "Return to the upper position to complete one repetition.",
         }
-        return self._result("tracking", messages[self.counter.current_phase], left_angle, right_angle)
+        feedback = None
+        if position is None and self.counter.current_phase == "up":
+            if min(left_angle, right_angle) <= DOWN_KNEE_ANGLE:
+                feedback = make_feedback("adjust", "bend_both_knees", "Lower position needs both knees to bend.", side)
+            else:
+                feedback = make_feedback("observed", "lower_position_unconfirmed", "Lower position is not confirmed yet.", side)
+        elif position is None and self.counter.current_phase == "down":
+            feedback = make_feedback("observed", "upper_position_unconfirmed", "Return both legs to the upper position to finish the repetition.", side)
+        return self._result("tracking", messages[self.counter.current_phase], left_angle, right_angle, torso_lean_angle, feedback)
+
+    def _check_stance(self, is_split_stance, ankles_level, is_upright, hips_above_feet, side):
+        if not is_split_stance:
+            return make_feedback("adjust", "split_stance_needed", "Position one foot forward and the other behind, then hold the upper position.", side)
+        if not ankles_level:
+            return make_feedback("unavailable", "ankle_view_needed", "Adjust the camera so both feet are visible at a similar image height.", side)
+        if not is_upright:
+            return make_feedback("adjust", "torso_position", "Bring your torso toward an upright position.", side)
+        if not hips_above_feet:
+            return make_feedback("unavailable", "hip_view_needed", "Use a side view with your hips clearly above your feet.", side)
+        return None
