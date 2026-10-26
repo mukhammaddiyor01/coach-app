@@ -1,5 +1,6 @@
 """Feedback passes through HTTP without treating missing joints as correct form."""
 import unittest
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
@@ -42,6 +43,20 @@ class FeedbackApiTests(unittest.TestCase):
             self.assertEqual(response.json()["workout"]["feedback"]["level"], "observed")
             self.landmarks = []
             self.assertEqual(self.frame(exercise).json()["workout"]["feedback"]["level"], "unavailable")
+
+    def test_lower_start_counts_through_the_camera_api(self):
+        for exercise, make_body in (("pushup", body), ("lunge", lunge_body)):
+            with self.subTest(exercise=exercise):
+                session = self.client.post(f"/api/{exercise}/session", headers=self.headers).json()
+                headers = {**self.headers, "Content-Type": "image/jpeg", "X-Coach-Session": session["session_id"]}
+                with patch("backend.workout_sessions.monotonic", side_effect=[0, 0.2, 0.4, 0.6]):
+                    for position in ("down", "down", "up", "up"):
+                        self.landmarks = make_body(position)
+                        response = self.client.post(f"/api/{exercise}/frame", content=b"frame", headers=headers)
+                        self.assertEqual(response.status_code, 200)
+                result = response.json()["workout"]
+                self.assertEqual(result["rep_count"], 1)
+                self.assertEqual(result["phase"], "up")
 
     def test_specific_correction_survives_response_validation(self):
         self.landmarks = body()

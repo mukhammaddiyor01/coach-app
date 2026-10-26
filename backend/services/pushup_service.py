@@ -33,7 +33,7 @@ class PushUpService:
         self.can_start_lower = True
         self.last_observed_at = None
         self._discard_incomplete_rep()
-        return self._result("waiting", "Start in the upper Push Up position.")
+        return self._result("waiting", "Keep your whole body visible and begin your Push Ups.")
 
     def _discard_incomplete_rep(self):
         self.current_phase = "ready"
@@ -108,12 +108,18 @@ class PushUpService:
 
         self.selected_side = side
         self._confirm_position(elbow_angle, observed_at)
+        ready_message = "Tracking resumed. Return to the upper position to continue."
+        if self.can_start_lower:
+            ready_message = "Begin your Push Ups; your start is detected automatically."
         messages = {
-            "ready": "Hold the upper position to begin.",
+            "ready": ready_message,
             "up": "Bend your elbows to reach the lower position.",
             "down": "Return to the upper position to complete one repetition.",
         }
-        return self._result("tracking", messages[self.current_phase], elbow_angle, body_angle, knee_angle)
+        feedback = None
+        if self.current_phase == "ready":
+            feedback = make_feedback("observed", "finding_start", messages["ready"], side)
+        return self._result("tracking", messages[self.current_phase], elbow_angle, body_angle, knee_angle, feedback)
 
     def _check_alignment(self, shoulder, hip, ankle, torso_length, is_horizontal,
                          is_supported, body_angle, knee_angle, side):

@@ -27,9 +27,10 @@ MediaPipe returns body landmarks; the browser draws visible points and lines.
 If no body is found, the app asks you to move into view.
 
 For Push Up, use a side view and keep your shoulder, elbow, wrist, hip, knee,
-and ankle visible. Hold the upper position, lower your body, then return to
-the upper position. This complete sequence counts once. Holding a position,
-starting at the bottom, or making an incomplete movement does not count.
+and ankle visible. Begin your normal movement; the app detects the starting
+position automatically. A confirmed lower-to-upper movement counts once, even
+when a new session begins at the bottom. Holding a position or moving without
+reaching both confirmed positions does not add repetitions.
 If tracking is lost, the incomplete repetition is discarded and completed
 repetitions remain. Displayed Push Up and Squats angles describe the currently
 tracked side.
@@ -38,7 +39,8 @@ For Squats, stand side-on with your shoulder, hip, knee, and ankle visible.
 Start standing, bend your knees and hips, then return to standing. The service
 tracks one visible leg and keeps that side for the current tracking sequence.
 
-For Lunge, begin upright with one foot forward and the other behind. Keep both
+For Lunge, place one foot forward and the other behind. A new session can
+begin from either the upper or lower position. Keep both
 hips, knees, and ankles visible. Bend both knees in place, then straighten both
 legs to complete one repetition. A movement of only one knee does not count.
 The screen shows left and right knee angles. Obvious changes in leg order or
@@ -238,8 +240,9 @@ an explicit access-control and data-handling review.
 1. Open a workout page, press Start workout, then allow camera access after
    pressing Start camera on the dedicated camera page.
 2. Keep your whole body visible. Look for body landmarks over the video.
-3. On each exercise camera page, hold the upper position, lower with control, and
-   return up. The count should increase once. Holding either position should
+3. Begin normal exercise movement. Push Up and Lunge accept an upper or lower
+   start; Squats begins standing. After a confirmed lower-to-upper movement,
+   the count should increase once. Holding either position should
    not add repetitions. On Squats, a half movement should not count. On Lunge,
    keep both legs visible and feet in place; both knees must bend and straighten.
 4. Move out of view during an incomplete repetition. Old landmarks should

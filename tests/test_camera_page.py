@@ -62,6 +62,14 @@ class CameraPageTests(unittest.TestCase):
             self.assertIn('class="live-workout-page"', response.text)
             self.assertEqual(response.headers["Cache-Control"], "no-store")
 
+    def test_start_guidance_matches_each_exercise(self):
+        for exercise in ("pushup", "lunge"):
+            response = self.client.get(f"/workout/{exercise}/camera")
+            self.assertIn("Your starting position is detected automatically.", response.text)
+            self.assertNotIn("hold the upper position", response.text)
+        response = self.client.get("/workout/squats/camera")
+        self.assertIn("then begin standing", response.text)
+
     def test_unknown_exercise_has_no_camera_scripts_or_count(self):
         response = self.client.get("/workout/unknown/camera")
         self.assertEqual(response.status_code, 404)

@@ -35,7 +35,7 @@ class LungeService:
     def reset(self):
         self.counter.reset()
         self._clear_stance()
-        return self._result("waiting", "Start upright in a split stance with both legs visible.")
+        return self._result("waiting", "Keep both legs visible and begin your stationary lunges.")
 
     def _discard_incomplete_rep(self):
         self.counter.discard_incomplete_rep()
@@ -132,40 +132,40 @@ class LungeService:
         elif max(left_angle, right_angle) <= DOWN_KNEE_ANGLE:
             position = "down"
         self.counter.confirm_position(position, observed_at)
+        ready_message = "Tracking resumed. Return to the upper position to continue."
+        if self.counter.can_start_lower:
+            ready_message = "Begin moving in your split stance; your start is detected automatically."
         messages = {
-            "ready": "Hold the upper split-stance position to begin.",
+            "ready": ready_message,
             "up": "Bend both knees to lower in place.",
             "down": "Return to the upper position to complete one repetition.",
         }
-        feedback = self._position_feedback(position, left_angle, right_angle, side)
+        feedback = self._position_feedback(position, side)
         return self._result("tracking", messages[self.counter.current_phase], left_angle, right_angle, torso_lean_angle, feedback)
 
-    def _position_feedback(self, position, left_angle, right_angle, side):
-        angles = f"Left: {left_angle:.1f}°, right: {right_angle:.1f}°."
+    def _position_feedback(self, position, side):
         phase = self.counter.current_phase
-
-        # Visible joints alone do not mean the starting position is confirmed.
         if phase == "ready":
-            if position == "up":
-                return make_feedback("observed", "upper_hold_needed", "Upper position detected. Hold briefly to confirm the start.", side)
+            if self.counter.can_start_lower:
+                return make_feedback(
+                    "observed", "finding_start",
+                    "Begin your normal movement. Your starting position is detected automatically.", side,
+                )
             return make_feedback(
-                "observed", "starting_position_unconfirmed",
-                f"Start not confirmed: both knee angles must reach {UP_KNEE_ANGLE}° or more. {angles}", side,
+                "observed", "tracking_recovery",
+                "Tracking resumed. Return to the upper position before the next repetition.", side,
             )
 
         if position is not None:
             return None
-
         if phase == "up":
-            code = "bend_both_knees" if min(left_angle, right_angle) <= DOWN_KNEE_ANGLE else "lower_position_unconfirmed"
             return make_feedback(
-                "observed", code,
-                f"Lower position not confirmed: both knee angles must reach {DOWN_KNEE_ANGLE}° or less. {angles}", side,
+                "observed", "lower_position_unconfirmed",
+                "Lower in place, bending both knees. Keep your feet in the same stance.", side,
             )
-
         return make_feedback(
             "observed", "upper_position_unconfirmed",
-            f"Finish not confirmed: both knee angles must return to {UP_KNEE_ANGLE}° or more. {angles}", side,
+            "Rise to the upper position to finish this repetition.", side,
         )
 
     def _check_stance(self, is_split_stance, ankles_level, is_upright, hips_above_feet, side):

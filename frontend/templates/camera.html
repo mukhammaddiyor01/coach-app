@@ -46,7 +46,7 @@
               <span id="rep-count" aria-live="polite" aria-atomic="true">0</span>
               <span id="rep-phase">Get ready</span>
             </div>
-            <p id="workout-message" class="camera-feedback" role="status">Start the camera, then hold the upper position.</p>
+            <p id="workout-message" class="camera-feedback" role="status">{% if exercise_id == "squats" %}Start the camera, then begin standing.{% else %}Start the camera, then begin your exercise. Your starting position is detected automatically.{% endif %}</p>
           </section>
         </div>
 

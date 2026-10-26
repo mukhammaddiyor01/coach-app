@@ -2,7 +2,12 @@
 
 ## What the app evaluates
 
-The app counts a confirmed upper → lower → upper sequence. It only describes
+The app normally counts a confirmed upper → lower → upper sequence. Push Up
+and Lunge also accept a confirmed lower start in a new session or after Reset:
+the first confirmed rise counts once. Squats still begins standing. Starting
+position is detected during normal movement, without a separate setup hold.
+After a tracking interruption, return to the upper position before the next
+repetition; an interrupted half repetition is discarded. The app only describes
 features visible in a side view; it does not certify complete exercise technique.
 All angles and thresholds are experimental 2D measurements.
 
@@ -23,7 +28,7 @@ The displayed labels mean:
 
 Squats and Lunge also show torso lean from vertical in tracking details.
 Push Up shows elbow, body, and knee angles. No correctness percentage is given.
-The existing counting thresholds and posture gates remain the counting rules;
+The angle thresholds and posture gates remain the counting rules;
 feedback explains these observations rather than adding a second counter.
 
 Side-view landmarks cannot reliably establish joint loading, pain, foot pressure,

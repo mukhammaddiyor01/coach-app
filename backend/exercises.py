@@ -11,7 +11,7 @@ EXERCISES = {
             },
             {
                 "title": "Find your starting position",
-                "description": "Start in a plank position with your arms extended. Keep your whole body in the frame."
+                "description": "Keep your whole body in the frame. The app can begin tracking from either the upper or lower Push Up position."
             },
             {
                 "title": "Keep your body aligned",
@@ -65,7 +65,7 @@ EXERCISES = {
             },
             {
                 "title": "Return to the upper position",
-                "description": "Rise slowly to your starting position. For this variation, you do not need to step forward between repetitions."
+                "description": "Rise to your upper position. The app can start tracking from either the upper or lower position; keep your feet in place."
             }
         ],
         "camera_guidance": "Use a side view. Keep your front and rear legs, especially both knees, in the frame."

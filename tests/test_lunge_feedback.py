@@ -33,9 +33,8 @@ class LungeFeedbackTests(unittest.TestCase):
         one_bent[26] = dict(lunge_body()[26])
         service.update(one_bent, 640, 480, 0.4)
         result = service.update(one_bent, 640, 480, 0.6)
-        self.assertEqual(result["feedback"]["code"], "bend_both_knees")
-        self.assertIn("110° or less", result["feedback"]["message"])
-        self.assertIn("Left:", result["feedback"]["message"])
+        self.assertEqual(result["feedback"]["code"], "lower_position_unconfirmed")
+        self.assertIn("both knees", result["feedback"]["message"])
         self.assertEqual(result["feedback"]["level"], "observed")
         self.assertEqual(hold(service, "up", 0.8)["rep_count"], 0)
 
@@ -55,14 +54,14 @@ class LungeFeedbackTests(unittest.TestCase):
         self.assertIn("upper position", result["message"])
         self.assertEqual(hold(service, "up", 0.4)["rep_count"], 1)
 
-    def test_first_upper_observation_explains_confirmation_hold(self):
+    def test_initial_feedback_uses_automatic_start_guidance(self):
         service = LungeService()
         result = service.update(lunge_body(), 640, 480, 0)
         self.assertEqual(result["phase"], "ready")
-        self.assertEqual(result["feedback"]["code"], "upper_hold_needed")
+        self.assertEqual(result["feedback"]["code"], "finding_start")
         self.assertEqual(service.update(lunge_body(), 640, 480, 0.2)["phase"], "up")
 
-    def test_unconfirmed_finish_reports_measured_knees_without_counting(self):
+    def test_unconfirmed_finish_guides_the_rise_without_counting(self):
         service = LungeService()
         hold(service, "up", 0)
         hold(service, "down", 0.4)
@@ -72,8 +71,7 @@ class LungeFeedbackTests(unittest.TestCase):
         self.assertEqual(result["phase"], "down")
         self.assertEqual(result["rep_count"], 0)
         self.assertEqual(result["feedback"]["code"], "upper_position_unconfirmed")
-        self.assertIn("150° or more", result["feedback"]["message"])
-        self.assertIn("Left:", result["feedback"]["message"])
+        self.assertIn("Rise", result["feedback"]["message"])
         self.assertEqual(hold(service, "up", 1)["rep_count"], 1)
 
     def test_valid_observation_and_reset_do_not_claim_complete_form_correctness(self):
