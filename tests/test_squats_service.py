@@ -115,7 +115,7 @@ class SquatsServiceTests(unittest.TestCase):
         service.update(observation, 640, 480, 0)
         self.assertEqual(observation, original)
         self.assertEqual(set(vars(service)), {"counter", "selected_side"})
-        self.assertTrue(all(type(value) in (int, float, str, type(None)) for value in vars(service.counter).values()))
+        self.assertTrue(all(type(value) in (bool, int, float, str, type(None)) for value in vars(service.counter).values()))
 
 
 if __name__ == "__main__":

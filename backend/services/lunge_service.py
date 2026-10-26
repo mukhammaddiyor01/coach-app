@@ -24,7 +24,7 @@ TORSO_SIDES = {"left": (11, 23), "right": (12, 24)}
 
 class LungeService:
     def __init__(self):
-        self.counter = RepetitionCounter()
+        self.counter = RepetitionCounter(allow_lower_start=True)
         self._clear_stance()
 
     def _clear_stance(self):

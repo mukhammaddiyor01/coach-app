@@ -39,10 +39,11 @@ class LungeServiceTests(unittest.TestCase):
         self.assertEqual(hold(service, "up", 1.2)["rep_count"], 1)
         self.assertEqual(hold(service, "up", 1.6)["rep_count"], 1)
 
-    def test_starting_at_bottom_does_not_count(self):
+    def test_new_session_can_count_a_confirmed_lower_start(self):
         service = LungeService()
-        hold(service, "down", 0)
-        self.assertEqual(hold(service, "up", 0.4)["rep_count"], 0)
+        self.assertEqual(hold(service, "down", 0)["phase"], "down")
+        self.assertEqual(hold(service, "down", 0.4)["rep_count"], 0)
+        self.assertEqual(hold(service, "up", 0.8)["rep_count"], 1)
 
     def test_both_knees_must_bend_and_straighten(self):
         service = LungeService()

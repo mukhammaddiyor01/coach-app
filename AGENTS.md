@@ -115,9 +115,13 @@ Do not implement a second, separate repetition counter in the frontend.
   Do not create a shared global counter for all users.
 
 Repetition-counting rules:
-1. Confirm the upper position first.
-2. Then confirm the lower position.
-3. Increment the count once when the user returns to the upper position.
+1. Normally confirm upper → lower → upper and count once on the return.
+2. For Push Up and Lunge, a new session may also start at a confirmed lower
+   position; count the first rise to a confirmed upper position once. Squats
+   continues to require an upper start.
+3. Allow a lower start only before the first position is confirmed in a new
+   session or Reset. After interrupted tracking, require an upper position
+   again so an interrupted half repetition cannot be counted.
 4. Holding a position or jittering around a threshold must not increase the count.
 5. If the body becomes invisible, discard the incomplete repetition and preserve
    the count of completed repetitions.

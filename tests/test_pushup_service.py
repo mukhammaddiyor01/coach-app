@@ -30,10 +30,11 @@ class PushUpTests(unittest.TestCase):
         self.assertEqual(hold(service, "up", 0.8)["rep_count"], 1)
         self.assertEqual(hold(service, "up", 1.2)["rep_count"], 1)
 
-    def test_lower_position_must_follow_confirmed_upper_position(self):
+    def test_new_session_can_count_a_confirmed_lower_start(self):
         service = PushUpService()
-        hold(service, "down", 0)
-        self.assertEqual(hold(service, "up", 0.4)["rep_count"], 0)
+        self.assertEqual(hold(service, "down", 0)["phase"], "down")
+        self.assertEqual(hold(service, "down", 0.4)["rep_count"], 0)
+        self.assertEqual(hold(service, "up", 0.8)["rep_count"], 1)
 
     def test_incomplete_repetition_and_jitter_are_not_counted(self):
         service = PushUpService()
@@ -138,7 +139,7 @@ class PushUpTests(unittest.TestCase):
         original = copy.deepcopy(observation)
         service.update(observation, 640, 480, 0)
         self.assertEqual(observation, original)
-        self.assertTrue(all(type(value) in (int, float, str, type(None)) for value in vars(service).values()))
+        self.assertTrue(all(type(value) in (bool, int, float, str, type(None)) for value in vars(service).values()))
 
 
 if __name__ == "__main__":

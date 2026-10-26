@@ -4,11 +4,13 @@ MAX_OBSERVATION_GAP_SECONDS = 1.0
 
 
 class RepetitionCounter:
-    def __init__(self):
+    def __init__(self, allow_lower_start=False):
+        self.allow_lower_start = allow_lower_start
         self.reset()
 
     def reset(self):
         self.rep_count = 0
+        self.can_start_lower = self.allow_lower_start
         self.last_observed_at = None
         self.discard_incomplete_rep()
 
@@ -35,12 +37,14 @@ class RepetitionCounter:
             return
         if position is None or observed_at - self.candidate_since < POSITION_HOLD_SECONDS:
             return
-        if position == "down" and self.current_phase == "up":
+        # Only a new session may begin at the bottom; tracking recovery cannot.
+        if position == "down" and (self.current_phase == "up" or self.can_start_lower):
             self.current_phase = "down"
         elif position == "up":
             if self.current_phase == "down":
                 self.rep_count += 1
             self.current_phase = "up"
+        self.can_start_lower = False
 
     def result(self, status, message):
         return {

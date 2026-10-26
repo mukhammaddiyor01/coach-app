@@ -47,17 +47,13 @@ class LungeFeedbackTests(unittest.TestCase):
         self.assertEqual(result["feedback"]["code"], "stance_changed")
         self.assertEqual(hold(service, "up", 0.8)["rep_count"], 0)
 
-    def test_starting_with_bent_knees_explains_why_counting_has_not_started(self):
+    def test_lower_start_guides_the_first_rise(self):
         service = LungeService()
         result = hold(service, "down", 0)
-        self.assertEqual(result["phase"], "ready")
+        self.assertEqual(result["phase"], "down")
         self.assertEqual(result["rep_count"], 0)
-        self.assertEqual(result["feedback"]["code"], "starting_position_unconfirmed")
-        self.assertIn("150° or more", result["feedback"]["message"])
-        self.assertIn("Left: 90.0°, right: 90.0°", result["feedback"]["message"])
-        self.assertEqual(hold(service, "up", 0.4)["rep_count"], 0)
-        hold(service, "down", 0.8)
-        self.assertEqual(hold(service, "up", 1.2)["rep_count"], 1)
+        self.assertIn("upper position", result["message"])
+        self.assertEqual(hold(service, "up", 0.4)["rep_count"], 1)
 
     def test_first_upper_observation_explains_confirmation_hold(self):
         service = LungeService()

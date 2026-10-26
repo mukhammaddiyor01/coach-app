@@ -30,6 +30,7 @@ class PushUpService:
 
     def reset(self):
         self.rep_count = 0
+        self.can_start_lower = True
         self.last_observed_at = None
         self._discard_incomplete_rep()
         return self._result("waiting", "Start in the upper Push Up position.")
@@ -166,9 +167,11 @@ class PushUpService:
         if position is None or observed_at - self.candidate_since < POSITION_HOLD_SECONDS:
             return
 
-        if position == "down" and self.current_phase == "up":
+        # Accept a confirmed lower start only before the first position is confirmed.
+        if position == "down" and (self.current_phase == "up" or self.can_start_lower):
             self.current_phase = "down"
         elif position == "up":
             if self.current_phase == "down":
                 self.rep_count += 1
             self.current_phase = "up"
+        self.can_start_lower = False
